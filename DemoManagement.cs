@@ -71,6 +71,8 @@ namespace MatchZy
             {
                 if (isDemoRecording)
                 {
+                    bool tvBroadcast = ConVar.Find("tv_broadcast")!.GetPrimitiveValue<bool>();
+                    if (tvBroadcast) Server.ExecuteCommand("tv_broadcast 0");
                     Server.ExecuteCommand($"tv_stoprecord");
                 }
                 isDemoRecording = false;
