@@ -75,12 +75,23 @@ jobs:
 
           cd package && zip -q -r ../MatchZy-$MATCHZY_VERSION-with-cssharp-windows.zip * && cd ..
 
-      - name: Upload Build Artifacts
+      - name: Upload MatchZy base
         uses: actions/upload-artifact@v4
         with:
-          name: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-dev
-          path: |
-            MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}.zip
-            MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-linux.zip
-            MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-windows.zip
+          name: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}
+          path: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}.zip
+          retention-days: 14
+
+      - name: Upload MatchZy with CSSharp (Linux)
+        uses: actions/upload-artifact@v4
+        with:
+          name: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-linux
+          path: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-linux.zip
+          retention-days: 14
+
+      - name: Upload MatchZy with CSSharp (Windows)
+        uses: actions/upload-artifact@v4
+        with:
+          name: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-windows
+          path: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-windows.zip
           retention-days: 14
