@@ -172,7 +172,11 @@ namespace MatchZy
             
             if (!input.Contains('\\') && !input.Contains('/'))
             {
-                // If no directory separators are found, return the input as-is
+                // No path separators — extract up to the end of ".json" in case
+                // the caller passed a full info line (e.g. from get5_listbackups).
+                int jsonIdx = input.IndexOf(".json", StringComparison.OrdinalIgnoreCase);
+                if (jsonIdx != -1)
+                    return input.Substring(0, jsonIdx + 5);
                 return input;
             }
 
