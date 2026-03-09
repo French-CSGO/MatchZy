@@ -289,6 +289,53 @@ public partial class MatchZy
                     info.DontBroadcast = true;
                 }
             }
+
+            // ── Live match stat tracking ──────────────────────────────────────────
+            if (isMatchLive)
+            {
+                CCSPlayerController? victim   = @event.Userid;
+                CCSPlayerController? attacker = @event.Attacker;
+                CCSPlayerController? assister = @event.Assister;
+                bool isSuicide = attacker == null || attacker == victim;
+
+                if (IsPlayerValid(victim))
+                {
+                    ulong victimSteamId = victim!.SteamID;
+
+                    // Knife kill
+                    if (!isSuicide && IsPlayerValid(attacker))
+                    {
+                        string weapon = @event.Weapon ?? "";
+                        if (weapon.Contains("knife") || weapon == "knifegg")
+                            IncrementStat(playerKnifeKills, attacker!.SteamID);
+
+                        // KAST: K for attacker
+                        if (attacker!.TeamNum != victim.TeamNum)
+                            MarkKast(attacker.SteamID, "K");
+                    }
+
+                    // KAST: A for assister
+                    if (IsPlayerValid(assister) && assister!.TeamNum != victim.TeamNum)
+                        MarkKast(assister.SteamID, "A");
+
+                    // Trade detection: check if victim's killer was recently killed
+                    var now = DateTime.UtcNow;
+                    foreach (var (deadSteamId, entry) in recentDeaths)
+                    {
+                        if (entry.killerSteamId == victimSteamId &&
+                            (now - entry.time).TotalSeconds <= 5.0)
+                        {
+                            // The victim just killed someone who had killed deadSteamId → trade
+                            MarkKast(deadSteamId, "T");
+                        }
+                    }
+
+                    // Record this death for future trade detection
+                    if (!isSuicide && IsPlayerValid(attacker))
+                        recentDeaths[victimSteamId] = (now, attacker!.SteamID);
+                }
+            }
+
             return HookResult.Continue;
         }
         catch (Exception e)
