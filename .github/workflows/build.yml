@@ -1,4 +1,4 @@
-name: Build (dev)
+name: Build and Release
 
 on:
   push:
@@ -6,13 +6,14 @@ on:
         - "documentation/**"
     branches:
       - main
+      - dev
   workflow_dispatch:
 
 jobs:
   build:
     permissions:
-        contents: read
-    name: Build (dev)
+        contents: write
+    name: Build and Release
     runs-on: ubuntu-latest
     outputs:
         MATCHZY_VERSION: ${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}
@@ -31,14 +32,14 @@ jobs:
             MATCHZY_VERSION=$(grep -oP 'ModuleVersion\s*=>\s*"\K[^"]*' MatchZy.cs)
             echo "MATCHZY_VERSION=$MATCHZY_VERSION" >> $GITHUB_ENV
             echo "MATCHZY_VERSION=$MATCHZY_VERSION" >> $GITHUB_OUTPUT
-      - name: Build and Release Artifacts
+      - name: Build Artifacts
         run: |
           CSSHARP_VERSION=$(grep -Po '<PackageReference Include="CounterStrikeSharp.API" Version="\K\d+(\.\d+)*' MatchZy.csproj)
           echo "Creating MatchZy base package with version: $MATCHZY_VERSION"
           dotnet publish -o package/addons/counterstrikesharp/plugins/MatchZy
-          cp -r cfg package 
+          cp -r cfg package
           cd package && zip -q -r ../MatchZy-$MATCHZY_VERSION.zip * && cd ..
-    
+
           echo "Creating package with CounterStrikeSharp (CSSharp) v$CSSHARP_VERSION for Linux"
           cd package/
           echo "Installing CounterStrikeSharp (CSSharp) v$CSSHARP_VERSION"
@@ -78,7 +79,9 @@ jobs:
 
           cd package && zip -q -r ../MatchZy-$MATCHZY_VERSION-with-cssharp-windows.zip * && cd ..
 
-      - name: Upload Build Artifacts
+      # dev branch: upload artifacts only (no release)
+      - name: Upload Build Artifacts (dev)
+        if: github.ref == 'refs/heads/dev'
         uses: actions/upload-artifact@v4
         with:
           name: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-dev
@@ -87,3 +90,29 @@ jobs:
             MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-linux.zip
             MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-windows.zip
           retention-days: 14
+
+      # main branch: create a GitHub release
+      - name: Create Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: MatchZy ${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}
+          tag_name: ${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}
+          body: |
+            Please see the [`CHANGELOG.md`](https://github.com/French-CSGO/MatchZy/blob/main/CHANGELOG.md) for details on changes.
+
+            Installation:
+            There are 3 files attached here:
+            One is the MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}.zip which only contains the MatchZy plugin files. Extract its contents in csgo/ directory of the server. (Prerequisite: Metamod and CounterStrikeSharp should be already installed on the server)
+
+            Second one is MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-linux.zip which contains MatchZy plugin file as well as CounterStrikeSharp files (for linux) so that you don't have to install CounterStrikeSharp separately. Simply extract its contents in csgo/ directory of the server.
+            Third one is MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-windows.zip which is same as above, but for Windows.
+            (Prerequisite: Metamod should be already installed on the server, rest CounterStrikeSharp and MatchZy will be installed once you extract the contents) (WITH CSSHARP RELEASE IS RECOMMENDED FOR FIRST TIME INSTALLERS)
+          draft: false
+          prerelease: false
+          files: |
+            MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}.zip
+            MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-linux.zip
+            MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-windows.zip
