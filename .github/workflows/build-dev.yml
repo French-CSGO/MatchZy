@@ -1,0 +1,86 @@
+name: Build (dev)
+
+on:
+  push:
+    paths-ignore:
+        - "documentation/**"
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  build:
+    permissions:
+        contents: read
+    name: Build (dev)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0'
+
+      - name: Get MatchZy Version
+        id: MATCHZY_VERSION
+        run: |
+            MATCHZY_VERSION=$(grep -oP 'ModuleVersion\s*=>\s*"\K[^"]*' MatchZy.cs)
+            echo "MATCHZY_VERSION=$MATCHZY_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build Artifacts
+        run: |
+          CSSHARP_VERSION=$(grep -Po '<PackageReference Include="CounterStrikeSharp.API" Version="\K\d+(\.\d+)*' MatchZy.csproj)
+          MATCHZY_VERSION=${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}
+          echo "Creating MatchZy base package with version: $MATCHZY_VERSION"
+          dotnet publish -o package/addons/counterstrikesharp/plugins/MatchZy
+          cp -r cfg package
+          cd package && zip -q -r ../MatchZy-$MATCHZY_VERSION.zip * && cd ..
+
+          echo "Creating package with CounterStrikeSharp (CSSharp) v$CSSHARP_VERSION for Linux"
+          cd package/
+          [ -e addons/counterstrikesharp ] && rm -rf addons/counterstrikesharp
+          curl -s https://api.github.com/repos/roflmuffin/CounterStrikeSharp/releases/tags/v$CSSHARP_VERSION |
+              grep "/counterstrikesharp-with-runtime-linux-$CSSHARP_VERSION" |
+              cut -d : -f 2,3 |
+              tr -d \" |
+              head -n 1 |
+              wget -O cssharp-linux.zip -qi -
+          unzip -o cssharp-linux.zip -d .
+          rm cssharp-linux.zip
+          cd ../
+
+          dotnet publish -o package/addons/counterstrikesharp/plugins/MatchZy
+
+          cd package && zip -q -r ../MatchZy-$MATCHZY_VERSION-with-cssharp-linux.zip * && cd ..
+
+          rm -r package/*
+
+          echo "Creating package with CounterStrikeSharp (CSSharp) v$CSSHARP_VERSION for Windows"
+          cp -r cfg package
+          cd package/
+          [ -e addons/counterstrikesharp ] && rm -rf addons/counterstrikesharp
+          curl -s https://api.github.com/repos/roflmuffin/CounterStrikeSharp/releases/tags/v$CSSHARP_VERSION |
+              grep "/counterstrikesharp-with-runtime-windows-$CSSHARP_VERSION" |
+              cut -d : -f 2,3 |
+              tr -d \" |
+              head -n 1 |
+              wget -O cssharp-windows.zip -qi -
+          unzip -o cssharp-windows.zip -d .
+          rm cssharp-windows.zip
+          cd ../
+
+          dotnet publish -o package/addons/counterstrikesharp/plugins/MatchZy
+
+          cd package && zip -q -r ../MatchZy-$MATCHZY_VERSION-with-cssharp-windows.zip * && cd ..
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-dev
+          path: |
+            MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}.zip
+            MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-linux.zip
+            MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-windows.zip
+          retention-days: 14
