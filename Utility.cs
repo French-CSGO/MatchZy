@@ -635,6 +635,7 @@ namespace MatchZy
                 mapName = "de_" + mapName;
             }
 
+            StopTvForMapChange();
             if (long.TryParse(mapName, out _))
             { // Check if mapName is a long for workshop map ids
                 Server.ExecuteCommand($"bot_kick");
@@ -971,6 +972,7 @@ namespace MatchZy
             Log($"[ChangeMap] Changing map to {mapName} with delay {delay}");
             AddTimer(delay, () =>
             {
+                StopTvForMapChange();
                 if (long.TryParse(mapName, out _))
                 {
                     Server.ExecuteCommand($"bot_kick");
