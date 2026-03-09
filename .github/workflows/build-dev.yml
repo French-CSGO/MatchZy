@@ -33,14 +33,14 @@ jobs:
         run: |
           CSSHARP_VERSION=$(grep -Po '<PackageReference Include="CounterStrikeSharp.API" Version="\K\d+(\.\d+)*' MatchZy.csproj)
           MATCHZY_VERSION=${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}
-          echo "Creating MatchZy base package with version: $MATCHZY_VERSION"
-          dotnet publish -o package/addons/counterstrikesharp/plugins/MatchZy
-          cp -r cfg package
-          cd package && zip -q -r ../MatchZy-$MATCHZY_VERSION.zip * && cd ..
 
-          echo "Creating package with CounterStrikeSharp (CSSharp) v$CSSHARP_VERSION for Linux"
-          cd package/
-          [ -e addons/counterstrikesharp ] && rm -rf addons/counterstrikesharp
+          echo "Building base package (v$MATCHZY_VERSION)"
+          dotnet publish -o pkg-base/addons/counterstrikesharp/plugins/MatchZy
+          cp -r cfg pkg-base/
+
+          echo "Building Linux package with CSSharp v$CSSHARP_VERSION"
+          cp -r pkg-base/. pkg-linux/
+          cd pkg-linux/
           curl -s https://api.github.com/repos/roflmuffin/CounterStrikeSharp/releases/tags/v$CSSHARP_VERSION |
               grep "/counterstrikesharp-with-runtime-linux-$CSSHARP_VERSION" |
               cut -d : -f 2,3 |
@@ -50,17 +50,11 @@ jobs:
           unzip -o cssharp-linux.zip -d .
           rm cssharp-linux.zip
           cd ../
+          dotnet publish -o pkg-linux/addons/counterstrikesharp/plugins/MatchZy
 
-          dotnet publish -o package/addons/counterstrikesharp/plugins/MatchZy
-
-          cd package && zip -q -r ../MatchZy-$MATCHZY_VERSION-with-cssharp-linux.zip * && cd ..
-
-          rm -r package/*
-
-          echo "Creating package with CounterStrikeSharp (CSSharp) v$CSSHARP_VERSION for Windows"
-          cp -r cfg package
-          cd package/
-          [ -e addons/counterstrikesharp ] && rm -rf addons/counterstrikesharp
+          echo "Building Windows package with CSSharp v$CSSHARP_VERSION"
+          cp -r pkg-base/. pkg-windows/
+          cd pkg-windows/
           curl -s https://api.github.com/repos/roflmuffin/CounterStrikeSharp/releases/tags/v$CSSHARP_VERSION |
               grep "/counterstrikesharp-with-runtime-windows-$CSSHARP_VERSION" |
               cut -d : -f 2,3 |
@@ -70,28 +64,25 @@ jobs:
           unzip -o cssharp-windows.zip -d .
           rm cssharp-windows.zip
           cd ../
-
-          dotnet publish -o package/addons/counterstrikesharp/plugins/MatchZy
-
-          cd package && zip -q -r ../MatchZy-$MATCHZY_VERSION-with-cssharp-windows.zip * && cd ..
+          dotnet publish -o pkg-windows/addons/counterstrikesharp/plugins/MatchZy
 
       - name: Upload MatchZy base
         uses: actions/upload-artifact@v4
         with:
           name: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}
-          path: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}.zip
+          path: pkg-base/
           retention-days: 14
 
       - name: Upload MatchZy with CSSharp (Linux)
         uses: actions/upload-artifact@v4
         with:
           name: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-linux
-          path: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-linux.zip
+          path: pkg-linux/
           retention-days: 14
 
       - name: Upload MatchZy with CSSharp (Windows)
         uses: actions/upload-artifact@v4
         with:
           name: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-windows
-          path: MatchZy-${{ steps.MATCHZY_VERSION.outputs.MATCHZY_VERSION }}-with-cssharp-windows.zip
+          path: pkg-windows/
           retention-days: 14
