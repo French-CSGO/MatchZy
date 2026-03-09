@@ -380,6 +380,7 @@ namespace MatchZy
                     isDemoRecording = false;
                 }
                 // Reset match data
+                ResetMatchStats();
                 matchStarted = false;
                 readyAvailable = true;
                 isPaused = false;
@@ -1035,6 +1036,7 @@ namespace MatchZy
             CreateMatchZyRoundDataBackup();
             InitPlayerDamageInfo();
             UpdateHostname();
+            if (isMatchLive) ResetPerRoundKastState();
         }
 
         private void HandlePostRoundEndEvent(EventRoundEnd @event)
@@ -1050,6 +1052,7 @@ namespace MatchZy
 
                     ShowDamageInfo();
 
+                    FinalizeKastForRound();
                     (Dictionary<ulong, Dictionary<string, object>> playerStatsDictionary, List<StatsPlayer> playerStatsListTeam1, List<StatsPlayer> playerStatsListTeam2) = GetPlayerStatsDict();
 
                     int currentMapNumber = matchConfig.CurrentMapNumber;
@@ -1669,24 +1672,31 @@ namespace MatchZy
                     playerStatsDictionary.Add(steamid64, stats);
 
                     // Populate PlayerStats instance
-                    // Todo: Implement stats which are marked as 0 for now
+                    playerFlashAssists.TryGetValue(steamid64, out int flashAssists);
+                    playerTeammatesFlashed.TryGetValue(steamid64, out int teammatesFlashed);
+                    playerKnifeKills.TryGetValue(steamid64, out int knifeKills);
+                    playerBombPlants.TryGetValue(steamid64, out int bombPlants);
+                    playerBombDefuses.TryGetValue(steamid64, out int bombDefuses);
+                    kastRoundsContributed.TryGetValue(steamid64, out int kastRounds);
+                    int kastPercent = roundsPlayed > 0 ? (int)Math.Round((double)kastRounds / roundsPlayed * 100) : 0;
+
                     PlayerStats playerStatsInstance = new()
                     {
                         Kills = playerStats.Kills,
                         Deaths = playerStats.Deaths,
                         Assists = playerStats.Assists,
-                        FlashAssists = 0,
+                        FlashAssists = flashAssists,
                         TeamKills = 0,
                         Suicides = 0,
                         Damage = playerStats.Damage,
                         UtilityDamage = playerStats.UtilityDamage,
                         EnemiesFlashed = playerStats.EnemiesFlashed,
-                        FriendliesFlashed = 0,
-                        KnifeKills = 0,
+                        FriendliesFlashed = teammatesFlashed,
+                        KnifeKills = knifeKills,
                         HeadshotKills = playerStats.HeadShotKills,
                         RoundsPlayed = roundsPlayed,
-                        BombDefuses = 0,
-                        BombPlants = 0,
+                        BombDefuses = bombDefuses,
+                        BombPlants = bombPlants,
                         Kills1 = 0,
                         Kills2 = playerStats.Enemy2Ks,
                         Kills3 = playerStats.Enemy3Ks,
@@ -1702,7 +1712,7 @@ namespace MatchZy
                         FirstDeathsT = 0,
                         FirstDeathsCT = 0,
                         TradeKills = 0,
-                        Kast = 0,
+                        Kast = kastPercent,
                         Score = player.Score,
                         Mvps = player.MVPs,
                     };
