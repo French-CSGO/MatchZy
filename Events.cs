@@ -236,3 +236,19 @@ public class MatchZyDemoUploadedEvent : MatchZyMatchEvent
     {
     }
 }
+
+public class MatchZyMatchPausedUnpausedEvent : MatchZyMapEvent
+{
+    [JsonPropertyName("team")]
+    public required string Team { get; init; }
+
+    [JsonPropertyName("pause_type")]
+    public required string PauseType { get; init; }
+
+    [JsonPropertyName("side")]
+    public required string Side { get; init; }
+
+    public MatchZyMatchPausedUnpausedEvent(bool paused) : base(paused ? "game_paused" : "game_unpaused")
+    {
+    }
+}

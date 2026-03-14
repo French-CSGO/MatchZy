@@ -1213,7 +1213,22 @@ namespace MatchZy
                 PrintToAllChat(Localizer["matchzy.pause.pausedthematch", pauseTeamName]);
                 // Server.PrintToChatAll($"{chatPrefix} {ChatColors.Green}{pauseTeamName}{ChatColors.Default} has paused the match. Type .unpause to unpause the match");
 
+                string techPauseSide = (player?.TeamNum == 2) ? "T" : "CT";
+                string techPauseTeam = (player?.TeamNum == 2)
+                    ? ((reverseTeamSides["TERRORIST"] == matchzyTeam1) ? "team1" : "team2")
+                    : ((reverseTeamSides["CT"] == matchzyTeam1) ? "team1" : "team2");
+                currentPauseType = "tech";
+
                 SetMatchPausedFlags();
+
+                Task.Run(async () => await SendEventAsync(new MatchZyMatchPausedUnpausedEvent(true)
+                {
+                    MatchId = liveMatchId,
+                    MapNumber = matchConfig.CurrentMapNumber,
+                    Team = techPauseTeam,
+                    PauseType = "tech",
+                    Side = techPauseSide
+                }));
             }
         }
 
@@ -1256,7 +1271,17 @@ namespace MatchZy
             {
                 Server.PrintToConsole($"[MatchZy] {Localizer["matchzy.pause.adminpausedthematch"]}");
             }
+            currentPauseType = "admin";
             SetMatchPausedFlags();
+
+            Task.Run(async () => await SendEventAsync(new MatchZyMatchPausedUnpausedEvent(true)
+            {
+                MatchId = liveMatchId,
+                MapNumber = matchConfig.CurrentMapNumber,
+                Team = "admin",
+                PauseType = "admin",
+                Side = "Admin"
+            }));
         }
 
         private void ForceUnpauseMatch(CCSPlayerController? player, CommandInfo? command)
@@ -1280,15 +1305,25 @@ namespace MatchZy
 
         private void UnpauseMatch()
         {
+            string pauseType = currentPauseType;
             Server.ExecuteCommand("mp_unpause_match;");
             isPaused = false;
             unpauseData["ct"] = false;
             unpauseData["t"] = false;
+            currentPauseType = "";
             if (!isPaused && pausedStateTimer != null)
             {
                 pausedStateTimer.Kill();
                 pausedStateTimer = null;
             }
+            Task.Run(async () => await SendEventAsync(new MatchZyMatchPausedUnpausedEvent(false)
+            {
+                MatchId = liveMatchId,
+                MapNumber = matchConfig.CurrentMapNumber,
+                Team = "admin",
+                PauseType = pauseType,
+                Side = "Admin"
+            }));
         }
 
         private void SetMatchPausedFlags()

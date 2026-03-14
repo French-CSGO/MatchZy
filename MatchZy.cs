@@ -39,6 +39,7 @@ namespace MatchZy
 
         // Pause Data
         public bool isPaused = false;
+        public string currentPauseType = "";
         public Dictionary<string, object> unpauseData = new Dictionary<string, object> {
             { "ct", false },
             { "t", false },
