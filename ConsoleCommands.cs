@@ -200,6 +200,12 @@ namespace MatchZy
             PauseMatch(player, command);
         }
 
+        [ConsoleCommand("css_tec", "Pause the match")]
+        public void OnTecCommand(CCSPlayerController? player, CommandInfo? command)
+        {
+            PauseMatch(player, command);
+        }
+
         [ConsoleCommand("css_pause", "Pause the match")]
         public void OnPauseCommand(CCSPlayerController? player, CommandInfo? command)
         {
