@@ -184,8 +184,8 @@ public partial class MatchZy
             {
                 Task.Run(async () => await SendEventAsync(new MatchZyRoundLiveEvent
                 {
-                    MatchId = matchConfig.MatchId,
-                    MapNumber = mapNumber,
+                    MatchId = liveMatchId,
+                    MapNumber = matchConfig.CurrentMapNumber,
                     RoundNumber = GetRoundNumer(),
                 }));
             }
