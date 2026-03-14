@@ -182,11 +182,14 @@ public partial class MatchZy
 
             if (isMatchLive)
             {
+                long capturedMatchId = liveMatchId;
+                int capturedMapNumber = matchConfig.CurrentMapNumber;
+                int capturedRoundNumber = GetRoundNumer();
                 Task.Run(async () => await SendEventAsync(new MatchZyRoundLiveEvent
                 {
-                    MatchId = liveMatchId,
-                    MapNumber = matchConfig.CurrentMapNumber,
-                    RoundNumber = GetRoundNumer(),
+                    MatchId = capturedMatchId,
+                    MapNumber = capturedMapNumber,
+                    RoundNumber = capturedRoundNumber,
                 }));
             }
             return HookResult.Continue;
