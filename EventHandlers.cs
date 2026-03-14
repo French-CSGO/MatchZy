@@ -179,6 +179,16 @@ public partial class MatchZy
                     AddTimer(0.01f, () => coach.ChangeTeam(oldTeam));
                 });
             }
+
+            if (isMatchLive)
+            {
+                Task.Run(async () => await SendEventAsync(new MatchZyRoundLiveEvent
+                {
+                    MatchId = matchConfig.MatchId,
+                    MapNumber = mapNumber,
+                    RoundNumber = GetRoundNumer(),
+                }));
+            }
             return HookResult.Continue;
         }
         catch (Exception e)

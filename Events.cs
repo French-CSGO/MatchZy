@@ -237,6 +237,16 @@ public class MatchZyDemoUploadedEvent : MatchZyMatchEvent
     }
 }
 
+public class MatchZyRoundLiveEvent : MatchZyMapEvent
+{
+    [JsonPropertyName("round_number")]
+    public required int RoundNumber { get; init; }
+
+    public MatchZyRoundLiveEvent() : base("game_round_live")
+    {
+    }
+}
+
 public class MatchZyMatchPausedUnpausedEvent : MatchZyMapEvent
 {
     [JsonPropertyName("team")]
