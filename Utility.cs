@@ -515,9 +515,9 @@ namespace MatchZy
                     if (isMatchSetup || matchModeOnly)
                     {
                         CsTeam team = GetPlayerTeam(player);
-                        if (team == CsTeam.None && player.IsValid)
+                        if (team == CsTeam.None && player.UserId.HasValue)
                         {
-                            player.Disconnect(NetworkDisconnectionReason.NETWORK_DISCONNECT_KICKED);
+                            Server.ExecuteCommand($"kickid {(ushort)player.UserId}");
                             continue;
                         }
                     }
@@ -1860,9 +1860,9 @@ namespace MatchZy
 
         public void KickPlayer(CCSPlayerController player)
         {
-            if (player.IsValid)
+            if (player.UserId.HasValue)
             {
-                player.Disconnect(NetworkDisconnectionReason.NETWORK_DISCONNECT_KICKED);
+                Server.ExecuteCommand($"kickid {(ushort)player.UserId}");
             }
         }
 
