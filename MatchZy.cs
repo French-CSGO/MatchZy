@@ -119,6 +119,7 @@ namespace MatchZy
                 { ".switch", OnTeamSwitch },
                 { ".swap", OnTeamSwitch },
                 { ".tech", OnTechCommand },
+                { ".tec", OnTechCommand },
                 { ".p", OnPauseCommand },
                 { ".pause", OnPauseCommand },
                 { ".unpause", OnUnpauseCommand },
