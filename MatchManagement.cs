@@ -20,6 +20,7 @@ namespace MatchZy
         public bool matchModeOnly = false;
 
         public bool resetCvarsOnSeriesEnd = true;
+        public bool kickOnSeriesEnd = false;
 
         public string loadedConfigFile = "";
 
@@ -608,6 +609,16 @@ namespace MatchZy
 
             if (resetCvarsOnSeriesEnd) ResetChangedConvars();
             isMatchLive = false;
+            if (kickOnSeriesEnd)
+            {
+                AddTimer(restartDelay, () => {
+                    var players = Utilities.GetPlayers().Where(p => p != null && p.IsValid && !p.IsBot);
+                    foreach (var p in players)
+                    {
+                        KickPlayer(p);
+                    }
+                });
+            }
             AddTimer(restartDelay, () => {
                 ResetMatch(false);
             });

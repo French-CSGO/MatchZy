@@ -84,6 +84,15 @@ namespace MatchZy
             resetCvarsOnSeriesEnd = bool.TryParse(args, out bool resetCvarsOnSeriesEndValue) ? resetCvarsOnSeriesEndValue : args != "0" && resetCvarsOnSeriesEnd;
         }
 
+        [ConsoleCommand("matchzy_kick_on_series_end", "Whether to kick all players when the match ends. Default value: false")]
+        public void MatchZyKickOnSeriesEndConvar(CCSPlayerController? player, CommandInfo command)
+        {
+            if (player != null) return;
+            string args = command.ArgString;
+
+            kickOnSeriesEnd = bool.TryParse(args, out bool kickOnSeriesEndValue) ? kickOnSeriesEndValue : args != "0" && kickOnSeriesEnd;
+        }
+
         [ConsoleCommand("matchzy_minimum_ready_required", "Minimum ready players required to start the match. Default: 1")]
         public void MatchZyMinimumReadyRequired(CCSPlayerController? player, CommandInfo command)
         {
