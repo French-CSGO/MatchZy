@@ -1,5 +1,12 @@
 # MatchZy Changelog
 
+# 0.8.19
+
+#### March 19, 2026
+
+- Added new per-player statistics tracked and stored in the database: `bomb_plants`, `bomb_defuses`, `knife_kills`, `friendlies_flashed`, `teamkill`, `suicide`, `first_kill_t`, `first_kill_ct`, `first_death_t`, `first_death_ct`.
+- These statistics are also included in G5 API event payloads (`PlayerStats` instance).
+
 # 0.8.15
 
 #### October 26, 2025

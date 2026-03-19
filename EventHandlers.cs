@@ -315,16 +315,50 @@ public partial class MatchZy
                 {
                     ulong victimSteamId = victim!.SteamID;
 
-                    // Knife kill
+                    // Suicide
+                    if (isSuicide)
+                    {
+                        IncrementStat(playerSuicides, victimSteamId);
+                    }
+
                     if (!isSuicide && IsPlayerValid(attacker))
                     {
                         string weapon = @event.Weapon ?? "";
+
+                        // Knife kill
                         if (weapon.Contains("knife") || weapon == "knifegg")
                             IncrementStat(playerKnifeKills, attacker!.SteamID);
 
-                        // KAST: K for attacker
-                        if (attacker!.TeamNum != victim.TeamNum)
+                        // Teamkill vs enemy kill
+                        if (attacker!.TeamNum == victim.TeamNum)
+                        {
+                            IncrementStat(playerTeamKills, attacker.SteamID);
+                        }
+                        else
+                        {
+                            // KAST: K for attacker (only enemy kills)
                             MarkKast(attacker.SteamID, "K");
+
+                            // First kill of the round (enemy kills only)
+                            if (!roundFirstKillDone)
+                            {
+                                roundFirstKillDone = true;
+                                if (attacker.TeamNum == (int)CsTeam.Terrorist)
+                                    IncrementStat(playerFirstKillT, attacker.SteamID);
+                                else if (attacker.TeamNum == (int)CsTeam.CounterTerrorist)
+                                    IncrementStat(playerFirstKillCT, attacker.SteamID);
+                            }
+                        }
+                    }
+
+                    // First death of the round (any non-suicide death)
+                    if (!isSuicide && !roundFirstDeathDone)
+                    {
+                        roundFirstDeathDone = true;
+                        if (victim.TeamNum == (int)CsTeam.Terrorist)
+                            IncrementStat(playerFirstDeathT, victimSteamId);
+                        else if (victim.TeamNum == (int)CsTeam.CounterTerrorist)
+                            IncrementStat(playerFirstDeathCT, victimSteamId);
                     }
 
                     // KAST: A for assister

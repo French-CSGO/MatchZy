@@ -12,6 +12,12 @@ namespace MatchZy
         public Dictionary<ulong, int> playerBombDefuses      = new();
         public Dictionary<ulong, int> playerFlashAssists     = new();
         public Dictionary<ulong, int> playerTeammatesFlashed = new();
+        public Dictionary<ulong, int> playerTeamKills        = new();
+        public Dictionary<ulong, int> playerSuicides         = new();
+        public Dictionary<ulong, int> playerFirstKillT       = new();
+        public Dictionary<ulong, int> playerFirstKillCT      = new();
+        public Dictionary<ulong, int> playerFirstDeathT      = new();
+        public Dictionary<ulong, int> playerFirstDeathCT     = new();
 
         // KAST: accumulated rounds where the player had K, A, S or T
         public Dictionary<ulong, int> kastRoundsContributed  = new();
@@ -21,6 +27,10 @@ namespace MatchZy
 
         // victim steamid → (death timestamp, killer steamid) — used to detect traded kills
         private Dictionary<ulong, (DateTime time, ulong killerSteamId)> recentDeaths = new();
+
+        // first kill/death flags for the current round
+        private bool roundFirstKillDone  = false;
+        private bool roundFirstDeathDone = false;
 
         // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -42,6 +52,8 @@ namespace MatchZy
         {
             kastFlags.Clear();
             recentDeaths.Clear();
+            roundFirstKillDone  = false;
+            roundFirstDeathDone = false;
         }
 
         // ─── Called at round end (before GetPlayerStatsDict) ─────────────────────
@@ -77,9 +89,17 @@ namespace MatchZy
             playerBombDefuses.Clear();
             playerFlashAssists.Clear();
             playerTeammatesFlashed.Clear();
+            playerTeamKills.Clear();
+            playerSuicides.Clear();
+            playerFirstKillT.Clear();
+            playerFirstKillCT.Clear();
+            playerFirstDeathT.Clear();
+            playerFirstDeathCT.Clear();
             kastRoundsContributed.Clear();
             kastFlags.Clear();
             recentDeaths.Clear();
+            roundFirstKillDone  = false;
+            roundFirstDeathDone = false;
         }
     }
 }

@@ -148,6 +148,16 @@ namespace MatchZy
                     head_shot_kills INTEGER NOT NULL,
                     cash_earned INTEGER NOT NULL,
                     enemies_flashed INTEGER NOT NULL,
+                    bomb_plants INTEGER NOT NULL DEFAULT 0,
+                    bomb_defuses INTEGER NOT NULL DEFAULT 0,
+                    knife_kills INTEGER NOT NULL DEFAULT 0,
+                    friendlies_flashed INTEGER NOT NULL DEFAULT 0,
+                    teamkill INTEGER NOT NULL DEFAULT 0,
+                    suicide INTEGER NOT NULL DEFAULT 0,
+                    first_kill_t INTEGER NOT NULL DEFAULT 0,
+                    first_kill_ct INTEGER NOT NULL DEFAULT 0,
+                    first_death_t INTEGER NOT NULL DEFAULT 0,
+                    first_death_ct INTEGER NOT NULL DEFAULT 0,
                     PRIMARY KEY (matchid, mapnumber, steamid64),
                     FOREIGN KEY (matchid) REFERENCES matchzy_stats_matches (matchid),
                     FOREIGN KEY (matchid, mapnumber) REFERENCES matchzy_stats_maps (matchid, mapnumber)
@@ -223,8 +233,18 @@ namespace MatchZy
                 head_shot_kills INT NOT NULL,
                 cash_earned INT NOT NULL,
                 enemies_flashed INT NOT NULL,
+                bomb_plants INT NOT NULL DEFAULT 0,
+                bomb_defuses INT NOT NULL DEFAULT 0,
+                knife_kills INT NOT NULL DEFAULT 0,
+                friendlies_flashed INT NOT NULL DEFAULT 0,
+                teamkill INT NOT NULL DEFAULT 0,
+                suicide INT NOT NULL DEFAULT 0,
+                first_kill_t INT NOT NULL DEFAULT 0,
+                first_kill_ct INT NOT NULL DEFAULT 0,
+                first_death_t INT NOT NULL DEFAULT 0,
+                first_death_ct INT NOT NULL DEFAULT 0,
                 PRIMARY KEY (matchid, mapnumber, steamid64),
-                CONSTRAINT fk_player_map_ref FOREIGN KEY (matchid, mapnumber) 
+                CONSTRAINT fk_player_map_ref FOREIGN KEY (matchid, mapnumber)
                     REFERENCES matchzy_stats_maps (matchid, mapnumber)
             )");
         }
@@ -385,7 +405,9 @@ namespace MatchZy
                         health_points_removed_total, health_points_dealt_total, shots_fired_total,
                         shots_on_target_total, v1_count, v1_wins, v2_count, v2_wins, entry_count, entry_wins,
                         equipment_value, money_saved, kill_reward, live_time, head_shot_kills,
-                        cash_earned, enemies_flashed)
+                        cash_earned, enemies_flashed,
+                        bomb_plants, bomb_defuses, knife_kills, friendlies_flashed,
+                        teamkill, suicide, first_kill_t, first_kill_ct, first_death_t, first_death_ct)
                     VALUES (
                         @matchId, @mapNumber, @steamid64, @team, @name, @kills, @deaths, @damage, @assists,
                         @enemy5ks, @enemy4ks, @enemy3ks, @enemy2ks, @utility_count, @utility_damage,
@@ -393,7 +415,9 @@ namespace MatchZy
                         @health_points_removed_total, @health_points_dealt_total, @shots_fired_total,
                         @shots_on_target_total, @v1_count, @v1_wins, @v2_count, @v2_wins, @entry_count,
                         @entry_wins, @equipment_value, @money_saved, @kill_reward, @live_time,
-                        @head_shot_kills, @cash_earned, @enemies_flashed)
+                        @head_shot_kills, @cash_earned, @enemies_flashed,
+                        @bomb_plants, @bomb_defuses, @knife_kills, @friendlies_flashed,
+                        @teamkill, @suicide, @first_kill_t, @first_kill_ct, @first_death_t, @first_death_ct)
                     ON DUPLICATE KEY UPDATE
                         team = @team, name = @name, kills = @kills, deaths = @deaths, damage = @damage,
                         assists = @assists, enemy5ks = @enemy5ks, enemy4ks = @enemy4ks, enemy3ks = @enemy3ks,
@@ -407,7 +431,11 @@ namespace MatchZy
                         entry_count = @entry_count, entry_wins = @entry_wins,
                         equipment_value = @equipment_value, money_saved = @money_saved,
                         kill_reward = @kill_reward, live_time = @live_time, head_shot_kills = @head_shot_kills,
-                        cash_earned = @cash_earned, enemies_flashed = @enemies_flashed";
+                        cash_earned = @cash_earned, enemies_flashed = @enemies_flashed,
+                        bomb_plants = @bomb_plants, bomb_defuses = @bomb_defuses, knife_kills = @knife_kills,
+                        friendlies_flashed = @friendlies_flashed, teamkill = @teamkill, suicide = @suicide,
+                        first_kill_t = @first_kill_t, first_kill_ct = @first_kill_ct,
+                        first_death_t = @first_death_t, first_death_ct = @first_death_ct";
 
                     if (connection is SqliteConnection) {
                         sqlQuery = @"
@@ -418,7 +446,9 @@ namespace MatchZy
                             health_points_removed_total, health_points_dealt_total, shots_fired_total,
                             shots_on_target_total, v1_count, v1_wins, v2_count, v2_wins, entry_count, entry_wins,
                             equipment_value, money_saved, kill_reward, live_time, head_shot_kills,
-                            cash_earned, enemies_flashed)
+                            cash_earned, enemies_flashed,
+                            bomb_plants, bomb_defuses, knife_kills, friendlies_flashed,
+                            teamkill, suicide, first_kill_t, first_kill_ct, first_death_t, first_death_ct)
                         VALUES (
                             @matchId, @mapNumber, @steamid64, @team, @name, @kills, @deaths, @damage, @assists,
                             @enemy5ks, @enemy4ks, @enemy3ks, @enemy2ks, @utility_count, @utility_damage,
@@ -426,7 +456,9 @@ namespace MatchZy
                             @health_points_removed_total, @health_points_dealt_total, @shots_fired_total,
                             @shots_on_target_total, @v1_count, @v1_wins, @v2_count, @v2_wins, @entry_count,
                             @entry_wins, @equipment_value, @money_saved, @kill_reward, @live_time,
-                            @head_shot_kills, @cash_earned, @enemies_flashed)";
+                            @head_shot_kills, @cash_earned, @enemies_flashed,
+                            @bomb_plants, @bomb_defuses, @knife_kills, @friendlies_flashed,
+                            @teamkill, @suicide, @first_kill_t, @first_kill_ct, @first_death_t, @first_death_ct)";
                     }
 
                     await connection.ExecuteAsync(sqlQuery,
@@ -467,7 +499,17 @@ namespace MatchZy
                             live_time = playerStats["LiveTime"],
                             head_shot_kills = playerStats["HeadShotKills"],
                             cash_earned = playerStats["CashEarned"],
-                            enemies_flashed = playerStats["EnemiesFlashed"]
+                            enemies_flashed = playerStats["EnemiesFlashed"],
+                            bomb_plants = playerStats["BombPlants"],
+                            bomb_defuses = playerStats["BombDefuses"],
+                            knife_kills = playerStats["KnifeKills"],
+                            friendlies_flashed = playerStats["FriendliesFlashed"],
+                            teamkill = playerStats["TeamKills"],
+                            suicide = playerStats["Suicides"],
+                            first_kill_t = playerStats["FirstKillT"],
+                            first_kill_ct = playerStats["FirstKillCT"],
+                            first_death_t = playerStats["FirstDeathT"],
+                            first_death_ct = playerStats["FirstDeathCT"]
                         });
 
                     Log($"[UpdatePlayerStats] Data inserted/updated for player {steamid64} in match {matchId}");

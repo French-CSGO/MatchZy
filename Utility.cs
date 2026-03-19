@@ -1693,7 +1693,17 @@ namespace MatchZy
                         { "LiveTime", playerStats.LiveTime },
                         { "HeadShotKills", playerStats.HeadShotKills },
                         { "CashEarned", playerStats.CashEarned },
-                        { "EnemiesFlashed", playerStats.EnemiesFlashed }
+                        { "EnemiesFlashed", playerStats.EnemiesFlashed },
+                        { "BombPlants", 0 },
+                        { "BombDefuses", 0 },
+                        { "KnifeKills", 0 },
+                        { "FriendliesFlashed", 0 },
+                        { "TeamKills", 0 },
+                        { "Suicides", 0 },
+                        { "FirstKillT", 0 },
+                        { "FirstKillCT", 0 },
+                        { "FirstDeathT", 0 },
+                        { "FirstDeathCT", 0 }
                     };
 
                     string teamName = "Spectator";
@@ -1716,8 +1726,26 @@ namespace MatchZy
                     playerKnifeKills.TryGetValue(steamid64, out int knifeKills);
                     playerBombPlants.TryGetValue(steamid64, out int bombPlants);
                     playerBombDefuses.TryGetValue(steamid64, out int bombDefuses);
+                    playerTeamKills.TryGetValue(steamid64, out int teamKills);
+                    playerSuicides.TryGetValue(steamid64, out int suicides);
+                    playerFirstKillT.TryGetValue(steamid64, out int firstKillT);
+                    playerFirstKillCT.TryGetValue(steamid64, out int firstKillCT);
+                    playerFirstDeathT.TryGetValue(steamid64, out int firstDeathT);
+                    playerFirstDeathCT.TryGetValue(steamid64, out int firstDeathCT);
                     kastRoundsContributed.TryGetValue(steamid64, out int kastRounds);
                     int kastPercent = roundsPlayed > 0 ? (int)Math.Round((double)kastRounds / roundsPlayed * 100) : 0;
+
+                    // Fill new stat fields in the dict
+                    stats["BombPlants"]       = bombPlants;
+                    stats["BombDefuses"]      = bombDefuses;
+                    stats["KnifeKills"]       = knifeKills;
+                    stats["FriendliesFlashed"] = teammatesFlashed;
+                    stats["TeamKills"]        = teamKills;
+                    stats["Suicides"]         = suicides;
+                    stats["FirstKillT"]       = firstKillT;
+                    stats["FirstKillCT"]      = firstKillCT;
+                    stats["FirstDeathT"]      = firstDeathT;
+                    stats["FirstDeathCT"]     = firstDeathCT;
 
                     PlayerStats playerStatsInstance = new()
                     {
@@ -1725,8 +1753,8 @@ namespace MatchZy
                         Deaths = playerStats.Deaths,
                         Assists = playerStats.Assists,
                         FlashAssists = flashAssists,
-                        TeamKills = 0,
-                        Suicides = 0,
+                        TeamKills = teamKills,
+                        Suicides = suicides,
                         Damage = playerStats.Damage,
                         UtilityDamage = playerStats.UtilityDamage,
                         EnemiesFlashed = playerStats.EnemiesFlashed,
@@ -1746,10 +1774,10 @@ namespace MatchZy
                         OneV3s = 0,
                         OneV4s = 0,
                         OneV5s = 0,
-                        FirstKillsT = 0,
-                        FirstKillsCT = 0,
-                        FirstDeathsT = 0,
-                        FirstDeathsCT = 0,
+                        FirstKillsT = firstKillT,
+                        FirstKillsCT = firstKillCT,
+                        FirstDeathsT = firstDeathT,
+                        FirstDeathsCT = firstDeathCT,
                         TradeKills = 0,
                         Kast = kastPercent,
                         Score = player.Score,
