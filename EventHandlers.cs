@@ -412,7 +412,7 @@ public partial class MatchZy
                                 IsBot = assister.IsBot,
                             },
                             FriendlyFire = assister.TeamNum == victim.TeamNum,
-                            FlashAssist = @event.AssistedFlash,
+                            FlashAssist = @event.Assistedflash,
                         };
                     }
 
@@ -436,9 +436,9 @@ public partial class MatchZy
                         Weapon = new MatchZyDeathWeapon { Name = weaponName },
                         Bomb = isBomb,
                         Headshot = @event.Headshot,
-                        ThruSmoke = @event.ThruSmoke,
+                        ThruSmoke = @event.Thrusmoke,
                         Penetrated = @event.Penetrated > 0,
-                        AttackerBlind = @event.AttackerBlind,
+                        AttackerBlind = @event.Attackerblind,
                         NoScope = @event.Noscope,
                         Suicide = isSuicide,
                         FriendlyFire = isFriendlyFire,
