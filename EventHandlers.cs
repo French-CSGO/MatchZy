@@ -381,6 +381,86 @@ public partial class MatchZy
                     if (!isSuicide && IsPlayerValid(attacker))
                         recentDeaths[victimSteamId] = (now, attacker!.SteamID);
                 }
+
+                // Send player_death event to G5API
+                if (IsPlayerValid(victim))
+                {
+                    string victimSide = victim!.TeamNum == (int)CsTeam.Terrorist ? "T"
+                                      : victim.TeamNum == (int)CsTeam.CounterTerrorist ? "CT" : "";
+                    bool isAttackerValid = !isSuicide && IsPlayerValid(attacker);
+                    string attackerSide = isAttackerValid
+                        ? (attacker!.TeamNum == (int)CsTeam.Terrorist ? "T"
+                           : attacker.TeamNum == (int)CsTeam.CounterTerrorist ? "CT" : "")
+                        : "";
+
+                    string weaponName = @event.Weapon ?? "";
+                    bool isBomb = weaponName == "planted_c4" || weaponName == "explosion";
+                    bool isFriendlyFire = isAttackerValid && attacker!.TeamNum == victim.TeamNum;
+
+                    MatchZyDeathAssist? assist = null;
+                    if (IsPlayerValid(assister))
+                    {
+                        string assisterSide = assister!.TeamNum == (int)CsTeam.Terrorist ? "T"
+                                            : assister.TeamNum == (int)CsTeam.CounterTerrorist ? "CT" : "";
+                        assist = new MatchZyDeathAssist
+                        {
+                            Player = new MatchZyDeathPlayerInfo
+                            {
+                                SteamId = assister.SteamID.ToString(),
+                                Name = assister.PlayerName,
+                                Side = assisterSide,
+                                IsBot = assister.IsBot,
+                            },
+                            FriendlyFire = assister.TeamNum == victim.TeamNum,
+                            FlashAssist = @event.Assistedflash,
+                        };
+                    }
+
+                    long capturedMatchId = liveMatchId;
+                    int capturedMapNumber = matchConfig.CurrentMapNumber;
+                    int capturedRoundNumber = GetRoundNumer();
+
+                    var deathEvent = new MatchZyPlayerDeathEvent
+                    {
+                        MatchId = capturedMatchId,
+                        MapNumber = capturedMapNumber,
+                        RoundNumber = capturedRoundNumber,
+                        RoundTime = 0,
+                        Player = new MatchZyDeathPlayerInfo
+                        {
+                            SteamId = victim.SteamID.ToString(),
+                            Name = victim.PlayerName,
+                            Side = victimSide,
+                            IsBot = victim.IsBot,
+                        },
+                        Weapon = new MatchZyDeathWeapon { Name = weaponName },
+                        Bomb = isBomb,
+                        Headshot = @event.Headshot,
+                        ThruSmoke = @event.Thrusmoke,
+                        Penetrated = @event.Penetrated > 0,
+                        AttackerBlind = @event.Attackerblind,
+                        NoScope = @event.Noscope,
+                        Suicide = isSuicide,
+                        FriendlyFire = isFriendlyFire,
+                        Attacker = isAttackerValid
+                            ? new MatchZyDeathPlayerInfo
+                            {
+                                SteamId = attacker!.SteamID.ToString(),
+                                Name = attacker.PlayerName,
+                                Side = attackerSide,
+                                IsBot = attacker.IsBot,
+                            }
+                            : new MatchZyDeathPlayerInfo
+                            {
+                                SteamId = victim.SteamID.ToString(),
+                                Name = victim.PlayerName,
+                                Side = victimSide,
+                                IsBot = victim.IsBot,
+                            },
+                        Assist = assist,
+                    };
+                    Task.Run(async () => await SendEventAsync(deathEvent));
+                }
             }
 
             return HookResult.Continue;

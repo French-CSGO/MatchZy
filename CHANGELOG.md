@@ -1,5 +1,11 @@
 # MatchZy Changelog
 
+# 0.8.20
+
+#### March 20, 2026
+
+- Added `player_death` event sent to G5 API on each kill during a live match. The event includes victim, attacker, assister, weapon, headshot, thru-smoke, penetrated, attacker-blind, no-scope, suicide, friendly fire, and flash assist data — stored in `player_stat_extras` on the API side.
+
 # 0.8.19
 
 #### March 19, 2026

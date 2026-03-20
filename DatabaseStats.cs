@@ -162,6 +162,30 @@ namespace MatchZy
                     FOREIGN KEY (matchid) REFERENCES matchzy_stats_matches (matchid),
                     FOREIGN KEY (matchid, mapnumber) REFERENCES matchzy_stats_maps (matchid, mapnumber)
                 )");
+
+            // Migrate existing tables: add new columns if they don't exist yet
+            var newColumns = new[]
+            {
+                ("bomb_plants",       "INTEGER NOT NULL DEFAULT 0"),
+                ("bomb_defuses",      "INTEGER NOT NULL DEFAULT 0"),
+                ("knife_kills",       "INTEGER NOT NULL DEFAULT 0"),
+                ("friendlies_flashed","INTEGER NOT NULL DEFAULT 0"),
+                ("teamkill",          "INTEGER NOT NULL DEFAULT 0"),
+                ("suicide",           "INTEGER NOT NULL DEFAULT 0"),
+                ("first_kill_t",      "INTEGER NOT NULL DEFAULT 0"),
+                ("first_kill_ct",     "INTEGER NOT NULL DEFAULT 0"),
+                ("first_death_t",     "INTEGER NOT NULL DEFAULT 0"),
+                ("first_death_ct",    "INTEGER NOT NULL DEFAULT 0"),
+            };
+            var existingColumns = connection.Query<string>("SELECT name FROM pragma_table_info('matchzy_stats_players')").ToHashSet();
+            foreach (var (col, def) in newColumns)
+            {
+                if (!existingColumns.Contains(col))
+                {
+                    connection.Execute($"ALTER TABLE matchzy_stats_players ADD COLUMN {col} {def}");
+                    Log($"[InitializeDatabase] Migration: added column '{col}' to matchzy_stats_players");
+                }
+            }
         }
 
         public void CreateRequiredTablesSQL()
@@ -247,6 +271,25 @@ namespace MatchZy
                 CONSTRAINT fk_player_map_ref FOREIGN KEY (matchid, mapnumber)
                     REFERENCES matchzy_stats_maps (matchid, mapnumber)
             )");
+
+            // Migrate existing tables: add new columns if they don't exist yet
+            var mysqlNewColumns = new[]
+            {
+                ("bomb_plants",       "INT NOT NULL DEFAULT 0"),
+                ("bomb_defuses",      "INT NOT NULL DEFAULT 0"),
+                ("knife_kills",       "INT NOT NULL DEFAULT 0"),
+                ("friendlies_flashed","INT NOT NULL DEFAULT 0"),
+                ("teamkill",          "INT NOT NULL DEFAULT 0"),
+                ("suicide",           "INT NOT NULL DEFAULT 0"),
+                ("first_kill_t",      "INT NOT NULL DEFAULT 0"),
+                ("first_kill_ct",     "INT NOT NULL DEFAULT 0"),
+                ("first_death_t",     "INT NOT NULL DEFAULT 0"),
+                ("first_death_ct",    "INT NOT NULL DEFAULT 0"),
+            };
+            foreach (var (col, def) in mysqlNewColumns)
+            {
+                connection.Execute($"ALTER TABLE matchzy_stats_players ADD COLUMN IF NOT EXISTS {col} {def}");
+            }
         }
 
         public long InitMatch(string team1name, string team2name, string serverIp, bool isMatchSetup, long liveMatchId, int mapNumber, string seriesType, MatchConfig matchConfig)

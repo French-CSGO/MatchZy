@@ -262,3 +262,81 @@ public class MatchZyMatchPausedUnpausedEvent : MatchZyMapEvent
     {
     }
 }
+
+// ── Player death event ─────────────────────────────────────────────────────
+
+public class MatchZyDeathPlayerInfo
+{
+    [JsonPropertyName("steamid")]
+    public required string SteamId { get; init; }
+
+    [JsonPropertyName("name")]
+    public required string Name { get; init; }
+
+    [JsonPropertyName("side")]
+    public required string Side { get; init; }
+
+    [JsonPropertyName("is_bot")]
+    public required bool IsBot { get; init; }
+}
+
+public class MatchZyDeathWeapon
+{
+    [JsonPropertyName("name")]
+    public required string Name { get; init; }
+}
+
+public class MatchZyDeathAssist
+{
+    [JsonPropertyName("player")]
+    public required MatchZyDeathPlayerInfo Player { get; init; }
+
+    [JsonPropertyName("friendly_fire")]
+    public required bool FriendlyFire { get; init; }
+
+    [JsonPropertyName("flash_assist")]
+    public required bool FlashAssist { get; init; }
+}
+
+public class MatchZyPlayerDeathEvent : MatchZyTimedRoundEvent
+{
+    [JsonPropertyName("player")]
+    public required MatchZyDeathPlayerInfo Player { get; init; }
+
+    [JsonPropertyName("weapon")]
+    public required MatchZyDeathWeapon Weapon { get; init; }
+
+    [JsonPropertyName("bomb")]
+    public required bool Bomb { get; init; }
+
+    [JsonPropertyName("headshot")]
+    public required bool Headshot { get; init; }
+
+    [JsonPropertyName("thru_smoke")]
+    public required bool ThruSmoke { get; init; }
+
+    [JsonPropertyName("penetrated")]
+    public required bool Penetrated { get; init; }
+
+    [JsonPropertyName("attacker_blind")]
+    public required bool AttackerBlind { get; init; }
+
+    [JsonPropertyName("no_scope")]
+    public required bool NoScope { get; init; }
+
+    [JsonPropertyName("suicide")]
+    public required bool Suicide { get; init; }
+
+    [JsonPropertyName("friendly_fire")]
+    public required bool FriendlyFire { get; init; }
+
+    [JsonPropertyName("attacker")]
+    public required MatchZyDeathPlayerInfo Attacker { get; init; }
+
+    [JsonPropertyName("assist")]
+    public MatchZyDeathAssist? Assist { get; init; }
+
+    public MatchZyPlayerDeathEvent() : base("player_death")
+    {
+    }
+}
