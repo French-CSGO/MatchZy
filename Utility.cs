@@ -2021,6 +2021,14 @@ namespace MatchZy
             return false;
         }
 
+        public bool IsPlayerInWhitelist(string steamId)
+        {
+            string whitelistPath = Path.Join(Server.GameDirectory + "/csgo/cfg", "MatchZy/whitelist.cfg");
+            if (!File.Exists(whitelistPath)) return false;
+            var whiteList = File.ReadAllLines(whitelistPath);
+            return whiteList.Contains(steamId);
+        }
+
         public void SwitchPlayerTeam(CCSPlayerController player, CsTeam team)
         {
             if (player.Team == team) return;
