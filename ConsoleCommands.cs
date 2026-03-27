@@ -641,6 +641,10 @@ namespace MatchZy
             {
                 LoadAdmins();
                 UpdatePlayersMap();
+                foreach (var p in playerData.Values)
+                {
+                    SetAdminClanTag(p);
+                }
             }
             else
             {

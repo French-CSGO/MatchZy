@@ -39,6 +39,8 @@ public partial class MatchZy
                 }
             }
 
+            SetAdminClanTag(player);
+
             if (player.UserId.HasValue)
             {
                 playerData[player.UserId.Value] = player;

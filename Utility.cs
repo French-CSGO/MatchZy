@@ -51,6 +51,20 @@ namespace MatchZy
             }
         }
 
+        public void SetAdminClanTag(CCSPlayerController player)
+        {
+            if (!IsPlayerValid(player)) return;
+            if (loadedAdmins.ContainsKey(player.SteamID.ToString()))
+            {
+                Server.NextFrame(() =>
+                {
+                    if (!IsPlayerValid(player)) return;
+                    player.Clan = "[Admin]";
+                    Utilities.SetStateChanged(player, "CCSPlayerController", "m_szClan");
+                });
+            }
+        }
+
         private void LoadAdmins()
         {
             string fileName = "MatchZy/admins.json";
