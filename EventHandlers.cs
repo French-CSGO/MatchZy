@@ -25,9 +25,9 @@ public partial class MatchZy
 
                 if (isMatchSetup || matchModeOnly)
                 {
+                    CsTeam team = GetPlayerTeam(player);
                     if (!IsPlayerInWhitelist(steamId.ToString()))
                     {
-                        CsTeam team = GetPlayerTeam(player);
                         if (team == CsTeam.None)
                         {
                             Log($"[EventPlayerConnectFull] KICKING PLAYER STEAMID: {steamId}, Name: {player.PlayerName} (NOT ALLOWED!)");
@@ -35,6 +35,15 @@ public partial class MatchZy
                             KickPlayer(player);
                             return HookResult.Continue;
                         }
+                    }
+                    else if (team == CsTeam.None)
+                    {
+                        // Whitelisted but not in match config — force spectator after pawn is initialized
+                        AddTimer(0.5f, () =>
+                        {
+                            if (IsPlayerValid(player))
+                                player.ChangeTeam(CsTeam.Spectator);
+                        });
                     }
                 }
             }
