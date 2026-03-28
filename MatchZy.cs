@@ -247,7 +247,7 @@ namespace MatchZy
 
                 CsTeam playerTeam = GetPlayerTeam(player);
 
-                if (playerTeam == CsTeam.None && IsPlayerInWhitelist(player.SteamID.ToString()))
+                if (playerTeam == CsTeam.None && IsPlayerBypassKick(player.SteamID.ToString()))
                     return HookResult.Continue;
 
                 SwitchPlayerTeam(player, playerTeam);
@@ -260,7 +260,7 @@ namespace MatchZy
                 if ((isMatchSetup || isVeto) && player != null && player.IsValid) {
                     if (int.TryParse(info.ArgByIndex(1), out int joiningTeam)) {
                         int playerTeam = (int)GetPlayerTeam(player);
-                        if (playerTeam == (int)CsTeam.None && IsPlayerInWhitelist(player.SteamID.ToString()))
+                        if (playerTeam == (int)CsTeam.None && IsPlayerBypassKick(player.SteamID.ToString()))
                         {
                             // Whitelisted admin not in match config — only allow spectator
                             return joiningTeam == (int)CsTeam.Spectator ? HookResult.Continue : HookResult.Stop;

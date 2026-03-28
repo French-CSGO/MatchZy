@@ -529,7 +529,7 @@ namespace MatchZy
                     if (isMatchSetup || matchModeOnly)
                     {
                         CsTeam team = GetPlayerTeam(player);
-                        if (team == CsTeam.None && player.UserId.HasValue)
+                        if (team == CsTeam.None && player.UserId.HasValue && !IsPlayerBypassKick(player.SteamID.ToString()))
                         {
                             Server.ExecuteCommand($"kickid {(ushort)player.UserId}");
                             continue;
@@ -2041,6 +2041,16 @@ namespace MatchZy
             if (!File.Exists(whitelistPath)) return false;
             var whiteList = File.ReadAllLines(whitelistPath);
             return whiteList.Contains(steamId);
+        }
+
+        public bool IsPlayerAdmin(string steamId)
+        {
+            return loadedAdmins.ContainsKey(steamId);
+        }
+
+        public bool IsPlayerBypassKick(string steamId)
+        {
+            return IsPlayerInWhitelist(steamId) || IsPlayerAdmin(steamId);
         }
 
         public void SwitchPlayerTeam(CCSPlayerController player, CsTeam team)

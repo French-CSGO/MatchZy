@@ -26,7 +26,7 @@ public partial class MatchZy
                 if (isMatchSetup || matchModeOnly)
                 {
                     CsTeam team = GetPlayerTeam(player);
-                    if (!IsPlayerInWhitelist(steamId.ToString()))
+                    if (!IsPlayerBypassKick(steamId.ToString()))
                     {
                         if (team == CsTeam.None)
                         {
