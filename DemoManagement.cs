@@ -67,6 +67,10 @@ namespace MatchZy
             string demoPath = Path.Join(Server.GameDirectory + "/csgo/", activeDemoFile);
             (int t1score, int t2score) = GetTeamsScore();
             int roundNumber = t1score + t2score;
+            // Capture upload config by value now — ResetChangedConvars() may clear these fields before the timers fire
+            string capturedUploadURL = demoUploadURL;
+            string capturedHeaderKey = demoUploadHeaderKey;
+            string capturedHeaderValue = demoUploadHeaderValue;
             AddTimer(delay, () =>
             {
                 if (isDemoRecording)
@@ -80,7 +84,7 @@ namespace MatchZy
                 {
                     Task.Run(async () =>
                     {
-                        await UploadFileAsync(demoPath, demoUploadURL, demoUploadHeaderKey, demoUploadHeaderValue, liveMatchId, currentMapNumber, roundNumber);
+                        await UploadFileAsync(demoPath, capturedUploadURL, capturedHeaderKey, capturedHeaderValue, liveMatchId, currentMapNumber, roundNumber);
                     });
                 });
             });
