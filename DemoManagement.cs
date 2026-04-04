@@ -80,12 +80,12 @@ namespace MatchZy
                     Server.ExecuteCommand($"tv_stoprecord");
                 }
                 isDemoRecording = false;
-                AddTimer(15, () =>
+                // Use Task.Run with async delay instead of AddTimer so the upload
+                // survives a map change (AddTimer is killed on changelevel).
+                Task.Run(async () =>
                 {
-                    Task.Run(async () =>
-                    {
-                        await UploadFileAsync(demoPath, capturedUploadURL, capturedHeaderKey, capturedHeaderValue, liveMatchId, currentMapNumber, roundNumber);
-                    });
+                    await Task.Delay(15000);
+                    await UploadFileAsync(demoPath, capturedUploadURL, capturedHeaderKey, capturedHeaderValue, liveMatchId, currentMapNumber, roundNumber);
                 });
             });
         }
