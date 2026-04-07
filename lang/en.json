@@ -3,6 +3,11 @@
   "matchzy.ready.markedunready": "You have been marked as NOT ready.",
   "matchzy.ready.readytotestorebackupinfomessage": "Unready players: {0}. Please type .ready when you are ready to restore the match backup. {1}",
 
+  "matchzy.veto.coinchoicepending": "{green}{0}{default} chose who starts the veto. Use {green}.vetostart{default} or {yellow}.vetoswap{default}.",
+  "matchzy.veto.coinchoiceprompt": "Use {green}.vetostart{default} to start the veto, or {yellow}.vetoswap{default} to give {green}{0}{default} the first action.",
+  "matchzy.veto.chosetostart": "{green}{0}{default} chose to start the veto.",
+  "matchzy.veto.chosetoswap": "{green}{0}{default} swapped — {green}{1}{default} will start the veto.",
+
   "matchzy.knife.sidedecisionpending": "{green}{0}{default} won the knife round. Waiting for them to type {green}.stay{default} or {green}.switch{default}.",
   "matchzy.knife.decidedtostay": "{green}{0}{default} has decided to stay.",
   "matchzy.knife.decidedtoswitch": "{green}{0}{default} has decided to switch.",

@@ -572,7 +572,7 @@ namespace MatchZy
             else if (Server.IsMapValid(currentMapName))
             {
                 Server.ExecuteCommand($"bot_kick");
-                Server.ExecuteCommand($"changelevel \"{currentMapName}\"");
+                Server.ExecuteCommand($"map \"{currentMapName}\"");
             }
             else
             {

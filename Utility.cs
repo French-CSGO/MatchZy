@@ -658,7 +658,11 @@ namespace MatchZy
             else if (Server.IsMapValid(mapName))
             {
                 Server.ExecuteCommand($"bot_kick");
-                Server.ExecuteCommand($"changelevel \"{mapName}\"");
+                // If already on this map, changelevel does nothing — use 'map' to force a full reload
+                if (Server.MapName == mapName)
+                    Server.ExecuteCommand($"map \"{mapName}\"");
+                else
+                    Server.ExecuteCommand($"changelevel \"{mapName}\"");
             }
             else
             {

@@ -16,6 +16,7 @@ namespace MatchZy
         public int vetoCountdownTime = 5; // In Seconds
 
         public bool mapChangePending = false;
+        public bool isVetoFirstChoicePending = false;
         public CounterStrikeSharp.API.Modules.Timers.Timer? vetoStateTimer = null;
         public Dictionary<string, int> vetoCaptains = new(){
             {"team1", -1},
@@ -70,7 +71,10 @@ namespace MatchZy
                 Server.PrintToChatAll($"{chatPrefix} Captain for {ChatColors.Green}{matchzyTeam1.teamName}{ChatColors.Default}: {ChatColors.Green}{playerData[team1Captain].PlayerName}{ChatColors.Default}");
                 Server.PrintToChatAll($"{chatPrefix} Captain for {ChatColors.Green}{matchzyTeam2.teamName}{ChatColors.Default}: {ChatColors.Green}{playerData[team2Captain].PlayerName}{ChatColors.Default}");
 
-                HandleVetoStep();
+                isVetoFirstChoicePending = true;
+                Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.coinchoicepending", matchzyTeam1.teamName]}");
+                playerData[team1Captain].PrintToChat($"{chatPrefix} {Localizer["matchzy.veto.coinchoiceprompt", matchzyTeam2.teamName]}");
+
                 vetoStateTimer?.Kill();
                 vetoStateTimer = null;
                 return;
@@ -176,9 +180,39 @@ namespace MatchZy
             HandeMapBanCommand(player, mapArg);
         }
 
+        [ConsoleCommand("css_vetostart", "Start the veto (team1 captain only, during coin flip)")]
+        public void OnVetoStartCommand(CCSPlayerController? player, CommandInfo? command)
+        {
+            if (player == null || !isVeto || !isVetoFirstChoicePending) return;
+            if (player.UserId != vetoCaptains["team1"]) return;
+
+            isVetoFirstChoicePending = false;
+            Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.chosetostart", matchzyTeam1.teamName]}");
+            HandleVetoStep();
+        }
+
+        [ConsoleCommand("css_vetoswap", "Give the first veto action to the opposing team (team1 captain only, during coin flip)")]
+        public void OnVetoSwapCommand(CCSPlayerController? player, CommandInfo? command)
+        {
+            if (player == null || !isVeto || !isVetoFirstChoicePending) return;
+            if (player.UserId != vetoCaptains["team1"]) return;
+
+            isVetoFirstChoicePending = false;
+            // Swap all team1_* <-> team2_* entries in the ban order so team2 goes first
+            for (int i = 0; i < matchConfig.MapBanOrder.Count; i++)
+            {
+                if (matchConfig.MapBanOrder[i].StartsWith("team1_"))
+                    matchConfig.MapBanOrder[i] = "team2_" + matchConfig.MapBanOrder[i].Substring(6);
+                else if (matchConfig.MapBanOrder[i].StartsWith("team2_"))
+                    matchConfig.MapBanOrder[i] = "team1_" + matchConfig.MapBanOrder[i].Substring(6);
+            }
+            Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.chosetoswap", matchzyTeam1.teamName, matchzyTeam2.teamName]}");
+            HandleVetoStep();
+        }
+
         public void HandeMapBanCommand(CCSPlayerController player, string map)
         {
-            if (!isVeto || SidePickPending() || player == null || map == null) return;
+            if (!isVeto || isVetoFirstChoicePending || SidePickPending() || player == null || map == null) return;
 
             int playerTeam = player.TeamNum;
             string currentTeamToBan;
@@ -207,7 +241,7 @@ namespace MatchZy
 
         public void HandeMapPickCommand(CCSPlayerController player, string map)
         {
-            if (!isVeto || SidePickPending() || player == null || map == null) return;
+            if (!isVeto || isVetoFirstChoicePending || SidePickPending() || player == null || map == null) return;
 
             int playerTeam = player.TeamNum;
             string currentTeamToPick;
@@ -303,6 +337,7 @@ namespace MatchZy
             Server.PrintToChatAll($"{chatPrefix} Type .ready when you are ready to resume map selection.");
             isPreVeto = true;
             isVeto = false;
+            isVetoFirstChoicePending = false;
             if (isPaused)
             {
                 UnpauseMatch();
@@ -364,6 +399,7 @@ namespace MatchZy
             readyAvailable = true;
             isPreVeto = false;
             isVeto = false;
+            isVetoFirstChoicePending = false;
             StartWarmup();
         }
 
@@ -653,6 +689,7 @@ namespace MatchZy
             readyAvailable = true;
             isPreVeto = false;
             isVeto = false;
+            isVetoFirstChoicePending = false;
             StartWarmup();
         }
     }
