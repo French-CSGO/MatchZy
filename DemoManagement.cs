@@ -67,25 +67,19 @@ namespace MatchZy
             string demoPath = Path.Join(Server.GameDirectory + "/csgo/", activeDemoFile);
             (int t1score, int t2score) = GetTeamsScore();
             int roundNumber = t1score + t2score;
-            // Capture upload config by value now — ResetChangedConvars() may clear these fields before the timers fire
-            string capturedUploadURL = demoUploadURL;
-            string capturedHeaderKey = demoUploadHeaderKey;
-            string capturedHeaderValue = demoUploadHeaderValue;
             AddTimer(delay, () =>
             {
                 if (isDemoRecording)
                 {
-                    bool tvBroadcast = ConVar.Find("tv_broadcast")!.GetPrimitiveValue<bool>();
-                    if (tvBroadcast) Server.ExecuteCommand("tv_broadcast 0");
                     Server.ExecuteCommand($"tv_stoprecord");
                 }
                 isDemoRecording = false;
-                // Use Task.Run with async delay instead of AddTimer so the upload
-                // survives a map change (AddTimer is killed on changelevel).
-                Task.Run(async () =>
+                AddTimer(15, () =>
                 {
-                    await Task.Delay(15000);
-                    await UploadFileAsync(demoPath, capturedUploadURL, capturedHeaderKey, capturedHeaderValue, liveMatchId, currentMapNumber, roundNumber);
+                    Task.Run(async () =>
+                    {
+                        await UploadFileAsync(demoPath, demoUploadURL, demoUploadHeaderKey, demoUploadHeaderValue, liveMatchId, currentMapNumber, roundNumber);
+                    });
                 });
             });
         }
