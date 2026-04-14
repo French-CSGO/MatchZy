@@ -158,7 +158,8 @@ namespace MatchZy
                     stepMessage = $"Use .pick <map> to pick a map.";
                     break;
             }
-            if (!playerData.ContainsKey(client) || !playerData[client].IsValid)
+            bool captainValid = playerData.ContainsKey(client) && playerData[client].IsValid;
+            if (!captainValid && !matchzy_veto_solo_test.Value)
             {
                 Log($"[PromptForMapSelectionInChat] Invalid captain found with ID: {client}");
                 return;
@@ -168,7 +169,8 @@ namespace MatchZy
             string mapListAsString = string.Join(", ", matchConfig.MapsLeftInVetoPool);
             Server.PrintToChatAll($"{chatPrefix} Remaining Maps: {mapListAsString}");
 
-            playerData[client].PrintToChat($"{chatPrefix} {stepMessage}");
+            if (captainValid)
+                playerData[client].PrintToChat($"{chatPrefix} {stepMessage}");
 
             if (matchzy_veto_solo_test.Value && (option == "team2_ban" || option == "team2_pick"))
             {
@@ -263,7 +265,7 @@ namespace MatchZy
                     return;
             }
 
-            if (player.UserId != vetoCaptains[currentTeamToBan]) return;
+            if (player.UserId != vetoCaptains[currentTeamToBan] && !matchzy_veto_solo_test.Value) return;
 
             if (!BanMap(map, playerTeam)) {
                 PrintToPlayerChat(player, $"{map} is not a valid map.");
@@ -293,7 +295,7 @@ namespace MatchZy
                     return;
             }
 
-            if (player.UserId != vetoCaptains[currentTeamToPick]) return;
+            if (player.UserId != vetoCaptains[currentTeamToPick] && !matchzy_veto_solo_test.Value) return;
 
             if (!PickMap(map, playerTeam)) {
                 PrintToPlayerChat(player, $"{map} is not a valid map.");
