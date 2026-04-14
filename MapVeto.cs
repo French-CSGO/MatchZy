@@ -61,7 +61,9 @@ namespace MatchZy
                 int team1Captain = vetoCaptains["team1"];
                 int team2Captain = vetoCaptains["team2"];
                 warningsPrinted = 0;
-                if (!playerData.ContainsKey(team1Captain) || !playerData.ContainsKey(team2Captain) || !playerData[team1Captain].IsValid || !playerData[team2Captain].IsValid)
+                bool team1CaptainValid = playerData.ContainsKey(team1Captain) && playerData[team1Captain].IsValid;
+                bool team2CaptainValid = playerData.ContainsKey(team2Captain) && playerData[team2Captain].IsValid;
+                if (!team1CaptainValid || (!team2CaptainValid && !matchzy_veto_solo_test.Value))
                 {
                     AbortVeto();
                     vetoStateTimer?.Kill();
@@ -69,11 +71,23 @@ namespace MatchZy
                     return;
                 }
                 Server.PrintToChatAll($"{chatPrefix} Captain for {ChatColors.Green}{matchzyTeam1.teamName}{ChatColors.Default}: {ChatColors.Green}{playerData[team1Captain].PlayerName}{ChatColors.Default}");
-                Server.PrintToChatAll($"{chatPrefix} Captain for {ChatColors.Green}{matchzyTeam2.teamName}{ChatColors.Default}: {ChatColors.Green}{playerData[team2Captain].PlayerName}{ChatColors.Default}");
+                if (team2CaptainValid)
+                    Server.PrintToChatAll($"{chatPrefix} Captain for {ChatColors.Green}{matchzyTeam2.teamName}{ChatColors.Default}: {ChatColors.Green}{playerData[team2Captain].PlayerName}{ChatColors.Default}");
+                else
+                    Server.PrintToChatAll($"{chatPrefix} Captain for {ChatColors.Green}{matchzyTeam2.teamName}{ChatColors.Default}: {ChatColors.Yellow}[Simulated]{ChatColors.Default}");
 
                 isVetoFirstChoicePending = true;
                 Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.coinchoicepending", matchzyTeam1.teamName]}");
                 playerData[team1Captain].PrintToChat($"{chatPrefix} {Localizer["matchzy.veto.coinchoiceprompt", matchzyTeam2.teamName]}");
+                if (matchzy_veto_solo_test.Value)
+                {
+                    AddTimer(2.0f, () => {
+                        if (!isVeto || !isVetoFirstChoicePending) return;
+                        isVetoFirstChoicePending = false;
+                        Server.PrintToChatAll($"{chatPrefix} [Solo Test] {Localizer["matchzy.veto.chosetostart", matchzyTeam1.teamName]}");
+                        HandleVetoStep();
+                    });
+                }
 
                 vetoStateTimer?.Kill();
                 vetoStateTimer = null;
@@ -162,6 +176,28 @@ namespace MatchZy
             Server.PrintToChatAll($"{chatPrefix} Remaining Maps: {mapListAsString}");
 
             playerData[client].PrintToChat($"{chatPrefix} {stepMessage}");
+
+            if (matchzy_veto_solo_test.Value && (option == "team2_ban" || option == "team2_pick"))
+            {
+                string capturedOption = option;
+                AddTimer(2.0f, () => {
+                    if (!isVeto || GetCurrentMapSelectionOption() != capturedOption || matchConfig.MapsLeftInVetoPool.Count == 0) return;
+                    string randomMap = matchConfig.MapsLeftInVetoPool[new Random().Next(matchConfig.MapsLeftInVetoPool.Count)];
+                    int side = (teamSides[matchzyTeam2] == "CT") ? 3 : 2;
+                    bool success;
+                    if (capturedOption == "team2_ban")
+                    {
+                        Server.PrintToChatAll($"{chatPrefix} [Solo Test] Simulating ban for {ChatColors.Green}{matchzyTeam2.teamName}{ChatColors.Default}: {ChatColors.LightRed}{randomMap}{ChatColors.Default}");
+                        success = BanMap(randomMap, side);
+                    }
+                    else
+                    {
+                        Server.PrintToChatAll($"{chatPrefix} [Solo Test] Simulating pick for {ChatColors.Green}{matchzyTeam2.teamName}{ChatColors.Default}: {ChatColors.Green}{randomMap}{ChatColors.Default}");
+                        success = PickMap(randomMap, side);
+                    }
+                    if (success) HandleVetoStep();
+                });
+            }
         }
 
         [ConsoleCommand("css_pick", "Picks map")]
@@ -496,9 +532,22 @@ namespace MatchZy
             Server.PrintToChatAll($"{chatPrefix} {ChatColors.Green}{matchzyTeam.teamName}{ChatColors.Default} must now pick a side to play on {ChatColors.Green}{mapName}{ChatColors.Default}");
 
             int client = vetoCaptains[teamString];
-            if (!playerData.ContainsKey(client) || !playerData[client].IsValid) return;
+            if (playerData.ContainsKey(client) && playerData[client].IsValid)
+            {
+                playerData[client].PrintToChat($"{chatPrefix} Use .ct or .t to pick a side");
+            }
 
-            playerData[client].PrintToChat($"{chatPrefix} Use .ct or .t to pick a side");
+            if (matchzy_veto_solo_test.Value && teamString == "team2")
+            {
+                AddTimer(2.0f, () => {
+                    if (!SidePickPending()) return;
+                    CsTeam randomSide = new Random().Next(2) == 0 ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
+                    string sideLabel = randomSide == CsTeam.CounterTerrorist ? "CT" : "T";
+                    Server.PrintToChatAll($"{chatPrefix} [Solo Test] {ChatColors.Green}{matchzyTeam2.teamName}{ChatColors.Default} picks {ChatColors.Green}{sideLabel}{ChatColors.Default}");
+                    PickSide(randomSide, "team2");
+                    HandleVetoStep();
+                });
+            }
         }
 
         public bool ValidateMapBanLogic() 
