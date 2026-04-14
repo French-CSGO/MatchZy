@@ -500,6 +500,14 @@ namespace MatchZy
                 {
                     HandeMapBanCommand(player, messageCommandArg);
                 }
+                if (message.StartsWith(".vetostart"))
+                {
+                    OnVetoStartCommand(player, null);
+                }
+                if (message.StartsWith(".vetoswap"))
+                {
+                    OnVetoSwapCommand(player, null);
+                }
                 if (message.StartsWith(".pick"))
                 {
                     HandeMapPickCommand(player, messageCommandArg);
