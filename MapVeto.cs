@@ -80,14 +80,7 @@ namespace MatchZy
                 Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.coinchoicepending", matchzyTeam1.teamName]}");
                 playerData[team1Captain].PrintToChat($"{chatPrefix} {Localizer["matchzy.veto.coinchoiceprompt", matchzyTeam2.teamName]}");
                 if (matchzy_veto_solo_test.Value)
-                {
-                    AddTimer(2.0f, () => {
-                        if (!isVeto || !isVetoFirstChoicePending) return;
-                        isVetoFirstChoicePending = false;
-                        Server.PrintToChatAll($"{chatPrefix} [Solo Test] {Localizer["matchzy.veto.chosetostart", matchzyTeam1.teamName]}");
-                        HandleVetoStep();
-                    });
-                }
+                    Server.PrintToChatAll($"{chatPrefix} [Solo Test] Any captain can use {ChatColors.Green}.vetostart{ChatColors.Default} or {ChatColors.Yellow}.vetoswap{ChatColors.Default}");
 
                 vetoStateTimer?.Kill();
                 vetoStateTimer = null;
@@ -220,7 +213,9 @@ namespace MatchZy
         public void OnVetoStartCommand(CCSPlayerController? player, CommandInfo? command)
         {
             if (player == null || !isVeto || !isVetoFirstChoicePending) return;
-            if (player.UserId != vetoCaptains["team1"]) return;
+            bool isTeam1Captain = player.UserId == vetoCaptains["team1"];
+            bool isTeam2Captain = player.UserId == vetoCaptains["team2"];
+            if (!isTeam1Captain && !(matchzy_veto_solo_test.Value && isTeam2Captain)) return;
 
             isVetoFirstChoicePending = false;
             Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.chosetostart", matchzyTeam1.teamName]}");
@@ -231,7 +226,9 @@ namespace MatchZy
         public void OnVetoSwapCommand(CCSPlayerController? player, CommandInfo? command)
         {
             if (player == null || !isVeto || !isVetoFirstChoicePending) return;
-            if (player.UserId != vetoCaptains["team1"]) return;
+            bool isTeam1CaptainSwap = player.UserId == vetoCaptains["team1"];
+            bool isTeam2CaptainSwap = player.UserId == vetoCaptains["team2"];
+            if (!isTeam1CaptainSwap && !(matchzy_veto_solo_test.Value && isTeam2CaptainSwap)) return;
 
             isVetoFirstChoicePending = false;
             // Swap all team1_* <-> team2_* entries in the ban order so team2 goes first
