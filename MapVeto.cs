@@ -210,6 +210,7 @@ namespace MatchZy
         }
 
         [ConsoleCommand("css_vetostart", "Start the veto (team1 captain only, during coin flip)")]
+        [ConsoleCommand("vetostart", "Start the veto (team1 captain only, during coin flip)")]
         public void OnVetoStartCommand(CCSPlayerController? player, CommandInfo? command)
         {
             if (player == null || !isVeto || !isVetoFirstChoicePending) return;
@@ -223,6 +224,7 @@ namespace MatchZy
         }
 
         [ConsoleCommand("css_vetoswap", "Give the first veto action to the opposing team (team1 captain only, during coin flip)")]
+        [ConsoleCommand("vetoswap", "Give the first veto action to the opposing team (team1 captain only, during coin flip)")]
         public void OnVetoSwapCommand(CCSPlayerController? player, CommandInfo? command)
         {
             if (player == null || !isVeto || !isVetoFirstChoicePending) return;
