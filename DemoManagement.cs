@@ -76,6 +76,7 @@ namespace MatchZy
                 isDemoRecording = false;
                 AddTimer(15, () =>
                 {
+                    Log($"[StopDemoRecording] Demo upload config — URL: \"{demoUploadURL}\" HeaderKey: \"{demoUploadHeaderKey}\" HeaderValue: \"{(string.IsNullOrEmpty(demoUploadHeaderValue) ? "" : "***")}\"");
                     Task.Run(async () =>
                     {
                         await UploadFileAsync(demoPath, demoUploadURL, demoUploadHeaderKey, demoUploadHeaderValue, liveMatchId, currentMapNumber, roundNumber);
