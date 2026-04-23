@@ -74,13 +74,15 @@ namespace MatchZy
                     Server.ExecuteCommand($"tv_stoprecord");
                 }
                 isDemoRecording = false;
-                AddTimer(15, () =>
+                // Use Task.Delay instead of AddTimer so the upload survives a map change
+                string capturedUrl = demoUploadURL;
+                string capturedHeaderKey = demoUploadHeaderKey;
+                string capturedHeaderValue = demoUploadHeaderValue;
+                Log($"[StopDemoRecording] Demo upload config — URL: \"{capturedUrl}\" HeaderKey: \"{capturedHeaderKey}\" HeaderValue: \"{(string.IsNullOrEmpty(capturedHeaderValue) ? "" : "***")}\"");
+                Task.Run(async () =>
                 {
-                    Log($"[StopDemoRecording] Demo upload config — URL: \"{demoUploadURL}\" HeaderKey: \"{demoUploadHeaderKey}\" HeaderValue: \"{(string.IsNullOrEmpty(demoUploadHeaderValue) ? "" : "***")}\"");
-                    Task.Run(async () =>
-                    {
-                        await UploadFileAsync(demoPath, demoUploadURL, demoUploadHeaderKey, demoUploadHeaderValue, liveMatchId, currentMapNumber, roundNumber);
-                    });
+                    await Task.Delay(15000);
+                    await UploadFileAsync(demoPath, capturedUrl, capturedHeaderKey, capturedHeaderValue, liveMatchId, currentMapNumber, roundNumber);
                 });
             });
         }
