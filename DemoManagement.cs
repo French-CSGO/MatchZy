@@ -21,6 +21,7 @@ namespace MatchZy
 
         public bool isDemoRecording = false;
         public bool isDemoRecordingEnabled = true;
+        public int demoUploadDelay = 10;
 
         public void StartDemoRecording()
         {
@@ -81,7 +82,7 @@ namespace MatchZy
                 Log($"[StopDemoRecording] Demo upload config — URL: \"{capturedUrl}\" HeaderKey: \"{capturedHeaderKey}\" HeaderValue: \"{(string.IsNullOrEmpty(capturedHeaderValue) ? "" : "***")}\"");
                 Task.Run(async () =>
                 {
-                    await Task.Delay(15000);
+                    await Task.Delay(demoUploadDelay * 1000);
                     await UploadFileAsync(demoPath, capturedUrl, capturedHeaderKey, capturedHeaderValue, liveMatchId, currentMapNumber, roundNumber);
                 });
             });

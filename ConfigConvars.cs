@@ -159,6 +159,14 @@ namespace MatchZy
             demoUploadURL = url;
         }
 
+        [ConsoleCommand("matchzy_demo_upload_delay", "Delay in seconds before uploading the demo after tv_stoprecord. Default value: 10")]
+        public void MatchZyDemoUploadDelay(CCSPlayerController? player, CommandInfo command)
+        {
+            if (player != null) return;
+            if (int.TryParse(command.ArgByIndex(1), out int delay) && delay >= 0)
+                demoUploadDelay = delay;
+        }
+
         [ConsoleCommand("matchzy_stop_command_available", "Whether .stop command is enabled or not (to restore the current round). Default value: false")]
         public void MatchZyStopCommandEnabled(CCSPlayerController? player, CommandInfo command)
         {
