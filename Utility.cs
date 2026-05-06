@@ -1079,9 +1079,14 @@ namespace MatchZy
 
                     int currentMapNumber = matchConfig.CurrentMapNumber;
                     long matchId = liveMatchId;
-                    int ctTeamNum = reverseTeamSides["CT"] == matchzyTeam1 ? 1 : 2;
-                    int tTeamNum = reverseTeamSides["TERRORIST"] == matchzyTeam1 ? 1 : 2;
-                    Winner winner = new(@event.Winner.ToString(), t1score > t2score ? "team1" : "team2");
+
+                    // Determine round winner correctly from the CS2 event winner (CT/T side)
+                    bool team1IsCT = reverseTeamSides["CT"] == matchzyTeam1;
+                    string winnerSide = @event.Winner == CsTeam.CounterTerrorist ? "CT" : "T";
+                    string winnerTeam = (@event.Winner == CsTeam.CounterTerrorist) == team1IsCT ? "team1" : "team2";
+                    string team1Side  = team1IsCT ? "CT" : "T";
+
+                    Winner winner = new(winnerSide, winnerTeam);
 
                     var roundEndEvent = new MatchZyRoundEndedEvent
                     {
@@ -1091,8 +1096,8 @@ namespace MatchZy
                         Reason = @event.Reason,
                         RoundTime = 0,
                         Winner = winner,
-                        StatsTeam1 = new MatchZyStatsTeam(matchzyTeam1.id, matchzyTeam1.teamName, 0, t1score, 0, 0, playerStatsListTeam1),
-                        StatsTeam2 = new MatchZyStatsTeam(matchzyTeam2.id, matchzyTeam2.teamName, 0, t2score, 0, 0, playerStatsListTeam2),
+                        StatsTeam1 = new MatchZyStatsTeam(matchzyTeam1.id, matchzyTeam1.teamName, 0, t1score, 0, 0, playerStatsListTeam1, team1Side),
+                        StatsTeam2 = new MatchZyStatsTeam(matchzyTeam2.id, matchzyTeam2.teamName, 0, t2score, 0, 0, playerStatsListTeam2, team1IsCT ? "T" : "CT"),
                     };
 
                     Task.Run(async () =>
