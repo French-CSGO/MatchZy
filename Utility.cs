@@ -1082,8 +1082,9 @@ namespace MatchZy
 
                     // Determine round winner correctly from the CS2 event winner (CT/T side)
                     bool team1IsCT = reverseTeamSides["CT"] == matchzyTeam1;
-                    string winnerSide = @event.Winner == CsTeam.CounterTerrorist ? "CT" : "T";
-                    string winnerTeam = (@event.Winner == CsTeam.CounterTerrorist) == team1IsCT ? "team1" : "team2";
+                    bool ctWon     = (CsTeam)@event.Winner == CsTeam.CounterTerrorist;
+                    string winnerSide = ctWon ? "CT" : "T";
+                    string winnerTeam = ctWon == team1IsCT ? "team1" : "team2";
                     string team1Side  = team1IsCT ? "CT" : "T";
 
                     Winner winner = new(winnerSide, winnerTeam);
