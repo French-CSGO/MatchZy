@@ -353,10 +353,6 @@ public partial class MatchZy
                             // KAST: K for attacker (only enemy kills)
                             MarkKast(attacker.SteamID, "K");
 
-                            // Track per-round enemy kills for 1K computation
-                            roundEnemyKills.TryGetValue(attacker.SteamID, out int rk);
-                            roundEnemyKills[attacker.SteamID] = rk + 1;
-
                             // First kill of the round (enemy kills only)
                             if (!roundFirstKillDone)
                             {

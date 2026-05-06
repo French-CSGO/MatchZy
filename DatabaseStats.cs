@@ -520,7 +520,6 @@ namespace MatchZy
                             enemy4ks = playerStats["Enemy4Ks"],
                             enemy3ks = playerStats["Enemy3Ks"],
                             enemy2ks = playerStats["Enemy2Ks"],
-                            enemy1ks = playerStats["Enemy1Ks"],
                             utility_count = playerStats["UtilityCount"],
                             utility_damage = playerStats["UtilityDamage"],
                             utility_successes = playerStats["UtilitySuccess"],
