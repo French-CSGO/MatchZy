@@ -18,12 +18,14 @@ namespace MatchZy
         public Dictionary<ulong, int> playerFirstKillCT      = new();
         public Dictionary<ulong, int> playerFirstDeathT      = new();
         public Dictionary<ulong, int> playerFirstDeathCT     = new();
+        public Dictionary<ulong, int> playerEnemy1Ks         = new();
 
         // KAST: accumulated rounds where the player had K, A, S or T
         public Dictionary<ulong, int> kastRoundsContributed  = new();
 
         // ─── Per-round state (reset each round start) ─────────────────────────────
         private Dictionary<ulong, HashSet<string>> kastFlags = new();
+        private Dictionary<ulong, int> roundEnemyKills = new();
 
         // victim steamid → (death timestamp, killer steamid) — used to detect traded kills
         private Dictionary<ulong, (DateTime time, ulong killerSteamId)> recentDeaths = new();
@@ -52,6 +54,7 @@ namespace MatchZy
         {
             kastFlags.Clear();
             recentDeaths.Clear();
+            roundEnemyKills.Clear();
             roundFirstKillDone  = false;
             roundFirstDeathDone = false;
         }
@@ -68,6 +71,16 @@ namespace MatchZy
 
                 if (player.PlayerPawn?.Value?.LifeState == (byte)LifeState_t.LIFE_ALIVE)
                     MarkKast(player.SteamID, "S");
+            }
+
+            // Accumulate 1K rounds: rounds where exactly 1 enemy was killed
+            foreach (var (steamId, kills) in roundEnemyKills)
+            {
+                if (kills == 1)
+                {
+                    playerEnemy1Ks.TryGetValue(steamId, out int cur);
+                    playerEnemy1Ks[steamId] = cur + 1;
+                }
             }
 
             // Accumulate KAST rounds for any player who had at least one flag
@@ -95,9 +108,11 @@ namespace MatchZy
             playerFirstKillCT.Clear();
             playerFirstDeathT.Clear();
             playerFirstDeathCT.Clear();
+            playerEnemy1Ks.Clear();
             kastRoundsContributed.Clear();
             kastFlags.Clear();
             recentDeaths.Clear();
+            roundEnemyKills.Clear();
             roundFirstKillDone  = false;
             roundFirstDeathDone = false;
         }
