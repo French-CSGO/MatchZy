@@ -922,9 +922,9 @@ namespace MatchZy
                 return;
             }
 
-            int mapsPlayed = currentMapNumber + 1;
-            int remainingMaps = matchConfig.NumMaps - mapsPlayed;
-            Log($"[HandleMatchEnd] MATCH ENDED, mapsPlayed: {mapsPlayed}, remainingMaps: {remainingMaps}, NumMaps: {matchConfig.NumMaps}, Team1SeriesScore: {matchzyTeam1.seriesScore}, Team2SeriesScore: {matchzyTeam2.seriesScore}");
+            int completedMaps = currentMapNumber + 1;
+            int remainingMaps = matchConfig.NumMaps - completedMaps;
+            Log($"[HandleMatchEnd] MATCH ENDED, completedMaps: {completedMaps}, remainingMaps: {remainingMaps}, NumMaps: {matchConfig.NumMaps}, Team1SeriesScore: {matchzyTeam1.seriesScore}, Team2SeriesScore: {matchzyTeam2.seriesScore}");
             if (matchzyTeam1.seriesScore == matchzyTeam2.seriesScore && remainingMaps <= 0)
             {
                 EndSeries(null, restartDelay - 1, t1score, t2score);
