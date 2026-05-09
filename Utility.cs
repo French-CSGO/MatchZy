@@ -892,9 +892,10 @@ namespace MatchZy
             string statsPath = Server.GameDirectory + "/csgo/MatchZy_Stats/" + liveMatchId.ToString();
 
             bool mapTeam1IsCT = reverseTeamSides["CT"] == matchzyTeam1;
+            bool mapIsDraw = t1score == t2score;
             bool mapTeam1Won  = t1score > t2score;
-            string mapWinnerSide = (mapTeam1Won == mapTeam1IsCT) ? "CT" : "T";
-            string mapWinnerTeam = mapTeam1Won ? "team1" : "team2";
+            string mapWinnerSide = mapIsDraw ? "none" : (mapTeam1Won == mapTeam1IsCT) ? "CT" : "T";
+            string mapWinnerTeam = mapIsDraw ? "none" : mapTeam1Won ? "team1" : "team2";
 
             var mapResultEvent = new MapResultEvent
             {
@@ -921,8 +922,9 @@ namespace MatchZy
                 return;
             }
 
-            int remainingMaps = matchConfig.NumMaps - matchzyTeam1.seriesScore - matchzyTeam2.seriesScore;
-            Log($"[HandleMatchEnd] MATCH ENDED, remainingMaps: {remainingMaps}, NumMaps: {matchConfig.NumMaps}, Team1SeriesScore: {matchzyTeam1.seriesScore}, Team2SeriesScore: {matchzyTeam2.seriesScore}");
+            int completedMaps = currentMapNumber + 1;
+            int remainingMaps = matchConfig.NumMaps - completedMaps;
+            Log($"[HandleMatchEnd] MATCH ENDED, completedMaps: {completedMaps}, remainingMaps: {remainingMaps}, NumMaps: {matchConfig.NumMaps}, Team1SeriesScore: {matchzyTeam1.seriesScore}, Team2SeriesScore: {matchzyTeam2.seriesScore}");
             if (matchzyTeam1.seriesScore == matchzyTeam2.seriesScore && remainingMaps <= 0)
             {
                 EndSeries(null, restartDelay - 1, t1score, t2score);
