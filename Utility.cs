@@ -928,6 +928,7 @@ namespace MatchZy
             if (matchzyTeam1.seriesScore == matchzyTeam2.seriesScore && remainingMaps <= 0)
             {
                 EndSeries(null, restartDelay - 1, t1score, t2score);
+                return;
             }
             else if (matchConfig.SeriesCanClinch)
             {
