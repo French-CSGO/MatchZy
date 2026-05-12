@@ -326,15 +326,20 @@ namespace MatchZy
             //     return HookResult.Continue;
             // });
 
-            RegisterListener<Listeners.OnMapStart>(mapName => { 
+            RegisterListener<Listeners.OnMapStart>(mapName => {
                 AddTimer(1.0f, () => {
                     if (!isMatchSetup)
                     {
                         AutoStart();
                         return;
                     }
+                    ExecuteChangedConvars();
                     if (isWarmup) StartWarmup();
                     if (isPractice) StartPracticeMode();
+                    if (matchConfig.ChangedCvars.TryGetValue("matchzy_match_simulate", out string? simValue) && simValue == "1")
+                    {
+                        Server.ExecuteCommand("sv_hibernate_when_empty 0; bot_join_after_player 0; bot_quota_mode normal; bot_quota 10;");
+                    }
                 });
             });
 
