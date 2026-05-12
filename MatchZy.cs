@@ -14,7 +14,7 @@ namespace MatchZy
 
         public override string ModuleName => "MatchZy";
 
-        public override string ModuleVersion => "0.8.21.2";
+        public override string ModuleVersion => "0.8.21.3";
 
         public override string ModuleAuthor => "WD- (https://github.com/shobhit-pathak/)";
 
@@ -53,8 +53,8 @@ namespace MatchZy
         public string knifeWinnerName = "";
 
         // Simulation helpers
-        public bool IsSimulatingTeam1 => matchzy_match_simulate.Value == 1 || matchzy_veto_simulate_team.Value == "team1" || matchzy_veto_simulate_team.Value == "both";
-        public bool IsSimulatingTeam2 => matchzy_match_simulate.Value == 1 || matchzy_veto_solo_test.Value || matchzy_veto_simulate_team.Value == "team2" || matchzy_veto_simulate_team.Value == "both";
+        public bool IsSimulatingTeam1 => matchzy_match_simulate.Value || matchzy_veto_simulate_team.Value == "team1" || matchzy_veto_simulate_team.Value == "both";
+        public bool IsSimulatingTeam2 => matchzy_match_simulate.Value || matchzy_veto_solo_test.Value || matchzy_veto_simulate_team.Value == "team2" || matchzy_veto_simulate_team.Value == "both";
 
         // Players Data (including admins)
         public int connectedPlayers = 0;
@@ -336,7 +336,7 @@ namespace MatchZy
                     ExecuteChangedConvars();
                     if (isWarmup) StartWarmup();
                     if (isPractice) StartPracticeMode();
-                    if (matchConfig.ChangedCvars.TryGetValue("matchzy_match_simulate", out string? simValue) && simValue == "1")
+                    if (matchConfig.ChangedCvars.TryGetValue("matchzy_match_simulate", out string? simValue) && (simValue == "1" || simValue == "true"))
                     {
                         Server.ExecuteCommand("sv_hibernate_when_empty 0; bot_join_after_player 0; bot_quota_mode normal; bot_quota 10;");
                     }
