@@ -727,6 +727,11 @@ namespace MatchZy
         {
             if (!readyAvailable || matchStarted) return;
 
+            // In simulate mode, match only starts via explicit css_force/css_forcestart command
+            bool simulateActive = matchzy_match_simulate.Value == 1 ||
+                (matchConfig.ChangedCvars.TryGetValue("matchzy_match_simulate", out string? simVal) && simVal == "1");
+            if (simulateActive) return;
+
             // Todo: Implement a same ready system for both pug and match
             int countOfReadyPlayers = playerReadyStatus.Count(kv => kv.Value == true);
             bool liveRequired = false;
