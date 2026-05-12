@@ -13,6 +13,8 @@ namespace MatchZy
 
         public FakeConVar<bool> smokeColorEnabled = new("matchzy_smoke_color_enabled", "Whether player-specific smoke color is enabled or not. Default: false", false);
         public FakeConVar<bool> matchzy_veto_solo_test = new("matchzy_veto_solo_test", "When enabled, automatically simulates team2 veto actions for solo testing. Default: false", false);
+        public FakeConVar<string> matchzy_veto_simulate_team = new("matchzy_veto_simulate_team", "Simulates veto for a specific team. Values: \"team1\", \"team2\", or \"both\". Empty string disables. Default: \"\"", "");
+        public FakeConVar<int> matchzy_match_simulate = new("matchzy_match_simulate", "When set to 1, simulates the entire match: veto for both teams, knife stay/swap, and enables bots. Default: 0", 0);
         public FakeConVar<bool> techPauseEnabled = new("matchzy_enable_tech_pause", "Whether .tech command is enabled or not. Default: true", true);
         public FakeConVar<string> techPausePermission  = new("matchzy_tech_pause_flag", "Flag required to use tech pause", "");
         public FakeConVar<int> techPauseDuration  = new("matchzy_tech_pause_duration", "Tech pause duration in seconds. Default value: 300", 300);

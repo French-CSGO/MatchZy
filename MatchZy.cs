@@ -52,6 +52,10 @@ namespace MatchZy
         public int knifeWinner = 0;
         public string knifeWinnerName = "";
 
+        // Simulation helpers
+        public bool IsSimulatingTeam1 => matchzy_match_simulate.Value == 1 || matchzy_veto_simulate_team.Value == "team1" || matchzy_veto_simulate_team.Value == "both";
+        public bool IsSimulatingTeam2 => matchzy_match_simulate.Value == 1 || matchzy_veto_solo_test.Value || matchzy_veto_simulate_team.Value == "team2" || matchzy_veto_simulate_team.Value == "both";
+
         // Players Data (including admins)
         public int connectedPlayers = 0;
         private Dictionary<int, bool> playerReadyStatus = new Dictionary<int, bool>();
