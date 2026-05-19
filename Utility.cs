@@ -1008,6 +1008,10 @@ namespace MatchZy
             AddTimer(restartDelay - 4, () =>
             {
                 if (!isMatchSetup) return;
+                // Prevent CS2's native map reload (from mp_match_end_restart true set in StartLive)
+                // from conflicting with the plugin's changelevel to the next map.
+                // Without this, both fire within 1 second of each other causing a black screen.
+                Server.ExecuteCommand("mp_match_end_restart false");
                 ChangeMap(nextMap, 3.0f);
                 matchStarted = false;
                 readyAvailable = true;
@@ -1019,7 +1023,6 @@ namespace MatchZy
                 isMatchLive = false;
                 isPractice = false;
                 isDryRun = false;
-                StartWarmup();
                 SetMapSides();
             });
         }
