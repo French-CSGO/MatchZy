@@ -368,6 +368,7 @@ namespace MatchZy
             SetTeamNames();
             UpdatePlayersMap();
             UpdateHostname();
+            PublishConnectedPlayersSnapshot();
 
             var seriesStartedEvent = new MatchZySeriesStartedEvent
             {
@@ -597,6 +598,32 @@ namespace MatchZy
                 Log($"[GetPlayerTeamKey - FATAL] Exception occurred: {ex.Message}");
             }
             return "none";
+        }
+
+        /// <summary>
+        /// Reports every already-connected player as a player_connect event.
+        /// Needed because players who joined before the match config was loaded
+        /// never trigger EventPlayerConnectFull once isMatchSetup flips true.
+        /// </summary>
+        private void PublishConnectedPlayersSnapshot()
+        {
+            foreach (var player in playerData.Values)
+            {
+                if (!IsPlayerValid(player) || player.IsBot || player.IsHLTV) continue;
+
+                var connectEvent = new MatchZyPlayerConnectedEvent
+                {
+                    MatchId = liveMatchId,
+                    Player = new MatchZyConnectionPlayerInfo
+                    {
+                        SteamId = player.SteamID.ToString(),
+                        Name = player.PlayerName,
+                        Team = GetPlayerTeamKey(player),
+                        IsBot = player.IsBot,
+                    }
+                };
+                Task.Run(async () => await SendEventAsync(connectEvent));
+            }
         }
 
         public void EndSeries(string? winnerName, int restartDelay, int t1score, int t2score)
