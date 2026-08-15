@@ -50,6 +50,22 @@ public partial class MatchZy
 
             SetAdminClanTag(player);
 
+            if (isMatchSetup && !player.IsBot && !player.IsHLTV)
+            {
+                var connectEvent = new MatchZyPlayerConnectedEvent
+                {
+                    MatchId = liveMatchId,
+                    Player = new MatchZyConnectionPlayerInfo
+                    {
+                        SteamId = player.SteamID.ToString(),
+                        Name = player.PlayerName,
+                        Team = GetPlayerTeamKey(player),
+                        IsBot = player.IsBot,
+                    }
+                };
+                Task.Run(async () => await SendEventAsync(connectEvent));
+            }
+
             if (player.UserId.HasValue)
             {
                 playerData[player.UserId.Value] = player;
@@ -96,6 +112,22 @@ public partial class MatchZy
             if (!IsPlayerValid(player)) return HookResult.Continue;
             if (!player!.UserId.HasValue) return HookResult.Continue;
             int userId = player.UserId.Value;
+
+            if (isMatchSetup && !player.IsBot && !player.IsHLTV)
+            {
+                var disconnectEvent = new MatchZyPlayerDisconnectedEvent
+                {
+                    MatchId = liveMatchId,
+                    Player = new MatchZyConnectionPlayerInfo
+                    {
+                        SteamId = player.SteamID.ToString(),
+                        Name = player.PlayerName,
+                        Team = GetPlayerTeamKey(player),
+                        IsBot = player.IsBot,
+                    }
+                };
+                Task.Run(async () => await SendEventAsync(disconnectEvent));
+            }
 
             if (playerReadyStatus.ContainsKey(userId))
             {

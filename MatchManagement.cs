@@ -576,6 +576,29 @@ namespace MatchZy
             return playerTeam;
         }
 
+        /// <summary>
+        /// Returns the roster assignment of a player as a stable "team1"/"team2" key
+        /// (independent of current T/CT side, which flips at halftime).
+        /// </summary>
+        private string GetPlayerTeamKey(CCSPlayerController player)
+        {
+            try
+            {
+                if (matchzyTeam1.coach.Contains(player)) return "coach_team1";
+                if (matchzyTeam2.coach.Contains(player)) return "coach_team2";
+
+                var steamId = player.SteamID.ToString();
+                if (matchzyTeam1.teamPlayers != null && matchzyTeam1.teamPlayers[steamId] != null) return "team1";
+                if (matchzyTeam2.teamPlayers != null && matchzyTeam2.teamPlayers[steamId] != null) return "team2";
+                if (matchConfig.Spectators != null && matchConfig.Spectators[steamId] != null) return "spectator";
+            }
+            catch (Exception ex)
+            {
+                Log($"[GetPlayerTeamKey - FATAL] Exception occurred: {ex.Message}");
+            }
+            return "none";
+        }
+
         public void EndSeries(string? winnerName, int restartDelay, int t1score, int t2score)
         {
             long matchId = liveMatchId;
