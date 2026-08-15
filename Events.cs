@@ -93,10 +93,35 @@ public class MatchZyPlayerTimedRoundEvent : MatchZyTimedRoundEvent
     }
 }
 
+public class MatchZyConnectionPlayerInfo
+{
+    [JsonPropertyName("steamid")]
+    public required string SteamId { get; init; }
+
+    [JsonPropertyName("name")]
+    public required string Name { get; init; }
+
+    [JsonPropertyName("team")]
+    public required string Team { get; init; }
+
+    [JsonPropertyName("is_bot")]
+    public required bool IsBot { get; init; }
+}
+
+public class MatchZyPlayerConnectedEvent : MatchZyMatchEvent
+{
+    [JsonPropertyName("player")]
+    public required MatchZyConnectionPlayerInfo Player { get; init; }
+
+    public MatchZyPlayerConnectedEvent() : base("player_connect")
+    {
+    }
+}
+
 public class MatchZyPlayerDisconnectedEvent : MatchZyMatchEvent
 {
     [JsonPropertyName("player")]
-    public required int Player { get; init; }
+    public required MatchZyConnectionPlayerInfo Player { get; init; }
 
     public MatchZyPlayerDisconnectedEvent() : base("player_disconnect")
     {
