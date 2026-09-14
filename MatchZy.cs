@@ -208,14 +208,7 @@ namespace MatchZy
                 { ".besttspawn", OnBestTSpawnCommand },
                 { ".worsttspawn", OnWorstTSpawnCommand },
                 { ".savepos", OnSavePosCommand},
-                { ".loadpos", OnLoadPosCommand},
-                // Registered here too (not just as [ConsoleCommand]) so "." works the
-                // same as every other MatchZy command regardless of the server's own
-                // CounterStrikeSharp chat-trigger config - [ConsoleCommand] alone only
-                // responds to whatever trigger(s) that config lists (commonly "!").
-                { ".rock", (player, command) => HandleRpsChoice(player, "rock") },
-                { ".paper", (player, command) => HandleRpsChoice(player, "paper") },
-                { ".scissors", (player, command) => HandleRpsChoice(player, "scissors") }
+                { ".loadpos", OnLoadPosCommand}
             };
 
             RegisterEventHandler<EventPlayerConnectFull>(EventPlayerConnectFullHandler);
@@ -418,6 +411,22 @@ namespace MatchZy
                 // Handling player commands
                 if (commandActions.ContainsKey(message)) {
                     commandActions[message](player, null);
+                }
+
+                // Rock-Paper-Scissors picks: handled here directly (not via a
+                // [ConsoleCommand]) specifically so event.Teamonly can be checked. A
+                // pick typed into ALL chat has already been read by the other
+                // captain by the time the server sees it, so it's refused instead of
+                // silently accepted - only a team-chat pick counts. Accepted with or
+                // without a "." / "!" prefix so players don't need to remember which
+                // one their server responds to for this.
+                string rpsBareCommand = message.TrimStart('.', '!', '/');
+                if (rpsBareCommand == "rock" || rpsBareCommand == "paper" || rpsBareCommand == "scissors") {
+                    if (isRpsPending && !@event.Teamonly) {
+                        player?.PrintToChat($"{chatPrefix} {Localizer["matchzy.veto.rpsteamchatonly"]}");
+                    } else {
+                        HandleRpsChoice(player, rpsBareCommand);
+                    }
                 }
 
                 if (message.StartsWith(".map"))

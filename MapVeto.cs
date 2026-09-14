@@ -247,15 +247,10 @@ namespace MatchZy
             }
         }
 
-        [ConsoleCommand("css_rock", "Rock-Paper-Scissors: pick rock")]
-        public void OnRpsRockCommand(CCSPlayerController? player, CommandInfo? command) => HandleRpsChoice(player, "rock");
-
-        [ConsoleCommand("css_paper", "Rock-Paper-Scissors: pick paper")]
-        public void OnRpsPaperCommand(CCSPlayerController? player, CommandInfo? command) => HandleRpsChoice(player, "paper");
-
-        [ConsoleCommand("css_scissors", "Rock-Paper-Scissors: pick scissors")]
-        public void OnRpsScissorsCommand(CCSPlayerController? player, CommandInfo? command) => HandleRpsChoice(player, "scissors");
-
+        // Deliberately not [ConsoleCommand]-registered: a pick submitted this way
+        // would skip the EventPlayerChat.Teamonly check in MatchZy.cs that keeps a
+        // captain's move from leaking to the other team over all-chat. RPS picks
+        // are only ever accepted from that one chat-based path.
         public void HandleVetoStep()
         {
             // As long as sides are not set for a map, either give side pick or auto-decide sides and recursively call this.
