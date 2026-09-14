@@ -854,6 +854,20 @@ namespace MatchZy
                         int numberOfPicks = matchConfig.NumMaps - 1;    // 2 picks in a Bo3
                         // Determine how many bans before we start picking (may be 0):
                         int numberOfStartBans = matchConfig.MapsPool.Count - (matchConfig.NumMaps + 2);  // 7 - (3 + 2) = 2
+                        // Determine how many bans to append to the end (may be 0):
+                        int numberOfEndBans = matchConfig.MapsPool.Count - 1 - numberOfPicks - numberOfStartBans;  // 7 - 2 - 2 - 1 = 2
+
+                        // At the tightest pool size (exactly NumMaps + 2 - e.g. 5 maps for
+                        // a Bo3), there are no "extra" maps for a leading ban, so this
+                        // would otherwise start with the picks. Move all the bans before
+                        // the picks instead - ban, ban, pick, pick, decider, not pick,
+                        // pick, ban, ban, decider.
+                        if (numberOfStartBans <= 0 && numberOfEndBans > 0)
+                        {
+                            numberOfStartBans = numberOfEndBans;
+                            numberOfEndBans = 0;
+                        }
+
                         if (numberOfStartBans > 0)
                         {                                          // == 2
                             for (int i = 0; i < numberOfStartBans; i++)
@@ -874,8 +888,6 @@ namespace MatchZy
                                 : (startingVetoTeam == matchzyTeam1 ? "team2_pick" : "team1_pick"));
                         }
 
-                        // Determine how many bans to append to the end (may be 0):
-                        int numberOfEndBans = matchConfig.MapsPool.Count - 1 - numberOfPicks - numberOfStartBans;  // 7 - 2 - 2 - 1 = 2
                         if (numberOfEndBans > 0)
                         {                                                     // == 2
                             for (int i = 0; i < numberOfEndBans; i++)
