@@ -413,22 +413,6 @@ namespace MatchZy
                     commandActions[message](player, null);
                 }
 
-                // Rock-Paper-Scissors picks: handled here directly (not via a
-                // [ConsoleCommand]) specifically so event.Teamonly can be checked. A
-                // pick typed into ALL chat has already been read by the other
-                // captain by the time the server sees it, so it's refused instead of
-                // silently accepted - only a team-chat pick counts. Accepted with or
-                // without a "." / "!" prefix so players don't need to remember which
-                // one their server responds to for this.
-                string rpsBareCommand = message.TrimStart('.', '!', '/');
-                if (rpsBareCommand == "rock" || rpsBareCommand == "paper" || rpsBareCommand == "scissors") {
-                    if (isRpsPending && !@event.Teamonly) {
-                        player?.PrintToChat($"{chatPrefix} {Localizer["matchzy.veto.rpsteamchatonly"]}");
-                    } else {
-                        HandleRpsChoice(player, rpsBareCommand);
-                    }
-                }
-
                 if (message.StartsWith(".map"))
                 {
                     HandleMapChangeCommand(player, messageCommandArg);
