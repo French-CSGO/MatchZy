@@ -4,6 +4,7 @@ using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Menu;
 using System;
 using System.Linq;
 
@@ -110,8 +111,23 @@ namespace MatchZy
 
             Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.rpsstart"]}");
 
-            if (IsSimulatingTeam1) AutoPlayRps("team1");
-            if (IsSimulatingTeam2) AutoPlayRps("team2");
+            if (IsSimulatingTeam1) AutoPlayRps("team1"); else OpenRpsMenu("team1");
+            if (IsSimulatingTeam2) AutoPlayRps("team2"); else OpenRpsMenu("team2");
+        }
+
+        // Shown only to that team's captain - a CS# chat menu is rendered privately
+        // to the viewing player, so (unlike typing a pick into chat) the opposing
+        // captain has no way to see it before both sides have chosen.
+        public void OpenRpsMenu(string team)
+        {
+            int captainUserId = vetoCaptains[team];
+            if (!playerData.ContainsKey(captainUserId) || !playerData[captainUserId].IsValid) return;
+
+            ChatMenu menu = new ChatMenu(Localizer["matchzy.veto.rpsmenutitle"]);
+            menu.AddMenuOption(Localizer["matchzy.veto.rpsrock"], (p, o) => HandleRpsChoice(p, "rock"));
+            menu.AddMenuOption(Localizer["matchzy.veto.rpspaper"], (p, o) => HandleRpsChoice(p, "paper"));
+            menu.AddMenuOption(Localizer["matchzy.veto.rpsscissors"], (p, o) => HandleRpsChoice(p, "scissors"));
+            menu.Open(playerData[captainUserId]);
         }
 
         public void AutoPlayRps(string team)
@@ -162,8 +178,8 @@ namespace MatchZy
                 Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.rpstie"]}");
                 rpsChoices["team1"] = null;
                 rpsChoices["team2"] = null;
-                if (IsSimulatingTeam1) AutoPlayRps("team1");
-                if (IsSimulatingTeam2) AutoPlayRps("team2");
+                if (IsSimulatingTeam1) AutoPlayRps("team1"); else OpenRpsMenu("team1");
+                if (IsSimulatingTeam2) AutoPlayRps("team2"); else OpenRpsMenu("team2");
                 return;
             }
 
@@ -247,15 +263,10 @@ namespace MatchZy
             }
         }
 
-        [ConsoleCommand("css_rock", "Rock-Paper-Scissors: pick rock")]
-        public void OnRpsRockCommand(CCSPlayerController? player, CommandInfo? command) => HandleRpsChoice(player, "rock");
-
-        [ConsoleCommand("css_paper", "Rock-Paper-Scissors: pick paper")]
-        public void OnRpsPaperCommand(CCSPlayerController? player, CommandInfo? command) => HandleRpsChoice(player, "paper");
-
-        [ConsoleCommand("css_scissors", "Rock-Paper-Scissors: pick scissors")]
-        public void OnRpsScissorsCommand(CCSPlayerController? player, CommandInfo? command) => HandleRpsChoice(player, "scissors");
-
+        // Deliberately not [ConsoleCommand]-registered: a pick submitted this way
+        // would skip the EventPlayerChat.Teamonly check in MatchZy.cs that keeps a
+        // captain's move from leaking to the other team over all-chat. RPS picks
+        // are only ever accepted from that one chat-based path.
         public void HandleVetoStep()
         {
             // As long as sides are not set for a map, either give side pick or auto-decide sides and recursively call this.
