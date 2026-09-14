@@ -487,7 +487,10 @@ namespace MatchZy
             {
                 matchConfig.MapBanOrder = jsonDataObject["veto_mode"]!.ToObject<List<string>>()!;
             }
-            
+            if (jsonDataObject["maps_display_names"] != null)
+            {
+                matchConfig.MapsDisplayNames = jsonDataObject["maps_display_names"]!.ToObject<Dictionary<string, string>>()!;
+            }
         }
 
         public void HandleTeamNameChangeCommand(CCSPlayerController? player, string teamName, int teamNum) {
