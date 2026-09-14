@@ -208,7 +208,14 @@ namespace MatchZy
                 { ".besttspawn", OnBestTSpawnCommand },
                 { ".worsttspawn", OnWorstTSpawnCommand },
                 { ".savepos", OnSavePosCommand},
-                { ".loadpos", OnLoadPosCommand}
+                { ".loadpos", OnLoadPosCommand},
+                // Registered here too (not just as [ConsoleCommand]) so "." works the
+                // same as every other MatchZy command regardless of the server's own
+                // CounterStrikeSharp chat-trigger config - [ConsoleCommand] alone only
+                // responds to whatever trigger(s) that config lists (commonly "!").
+                { ".rock", (player, command) => HandleRpsChoice(player, "rock") },
+                { ".paper", (player, command) => HandleRpsChoice(player, "paper") },
+                { ".scissors", (player, command) => HandleRpsChoice(player, "scissors") }
             };
 
             RegisterEventHandler<EventPlayerConnectFull>(EventPlayerConnectFullHandler);
