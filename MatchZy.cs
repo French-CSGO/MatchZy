@@ -421,11 +421,17 @@ namespace MatchZy
                 // without a "." / "!" prefix so players don't need to remember which
                 // one their server responds to for this.
                 string rpsBareCommand = message.TrimStart('.', '!', '/');
-                if (rpsBareCommand == "rock" || rpsBareCommand == "paper" || rpsBareCommand == "scissors") {
+                string? rpsMove = rpsBareCommand switch {
+                    "rock" or "pierre" => "rock",
+                    "paper" or "feuille" => "paper",
+                    "scissors" or "ciseaux" => "scissors",
+                    _ => null
+                };
+                if (rpsMove != null) {
                     if (isRpsPending && !@event.Teamonly) {
                         player?.PrintToChat($"{chatPrefix} {Localizer["matchzy.veto.rpsteamchatonly"]}");
                     } else {
-                        HandleRpsChoice(player, rpsBareCommand);
+                        HandleRpsChoice(player, rpsMove);
                     }
                 }
 
@@ -525,11 +531,11 @@ namespace MatchZy
                 {
                     HandeMapBanCommand(player, messageCommandArg);
                 }
-                if (message.StartsWith(".vetostart"))
+                if (message.StartsWith(".vetostart") || message.StartsWith(".vetodebut"))
                 {
                     OnVetoStartCommand(player, null);
                 }
-                if (message.StartsWith(".vetoswap"))
+                if (message.StartsWith(".vetoswap") || message.StartsWith(".vetoechange"))
                 {
                     OnVetoSwapCommand(player, null);
                 }
