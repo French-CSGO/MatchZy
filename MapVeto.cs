@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using System;
+using System.Linq;
 
 namespace MatchZy
 {
@@ -197,7 +198,7 @@ namespace MatchZy
             }
             Server.PrintToChatAll($"{chatPrefix} {action}");
 
-            string mapListAsString = string.Join(", ", matchConfig.MapsLeftInVetoPool);
+            string mapListAsString = string.Join(", ", matchConfig.MapsLeftInVetoPool.Select(matchConfig.GetMapDisplayName));
             Server.PrintToChatAll($"{chatPrefix} Remaining Maps: {mapListAsString}");
 
             if (captainValid)
@@ -214,12 +215,12 @@ namespace MatchZy
                     bool success;
                     if (capturedOption.EndsWith("_ban"))
                     {
-                        Server.PrintToChatAll($"{chatPrefix} [Simulate] Simulating ban for {ChatColors.Green}{capturedTeam.teamName}{ChatColors.Default}: {ChatColors.LightRed}{randomMap}{ChatColors.Default}");
+                        Server.PrintToChatAll($"{chatPrefix} [Simulate] Simulating ban for {ChatColors.Green}{capturedTeam.teamName}{ChatColors.Default}: {ChatColors.LightRed}{matchConfig.GetMapDisplayName(randomMap)}{ChatColors.Default}");
                         success = BanMap(randomMap, capturedSide);
                     }
                     else
                     {
-                        Server.PrintToChatAll($"{chatPrefix} [Simulate] Simulating pick for {ChatColors.Green}{capturedTeam.teamName}{ChatColors.Default}: {ChatColors.Green}{randomMap}{ChatColors.Default}");
+                        Server.PrintToChatAll($"{chatPrefix} [Simulate] Simulating pick for {ChatColors.Green}{capturedTeam.teamName}{ChatColors.Default}: {ChatColors.Green}{matchConfig.GetMapDisplayName(randomMap)}{ChatColors.Default}");
                         success = PickMap(randomMap, capturedSide);
                     }
                     if (success) HandleVetoStep();
@@ -346,7 +347,7 @@ namespace MatchZy
 
             if (team != 0) {
                 matchzyTeam = (team == 2) ? reverseTeamSides["TERRORIST"] : reverseTeamSides["CT"];
-                Server.PrintToChatAll($"{chatPrefix} {ChatColors.Green}{matchzyTeam.teamName}{ChatColors.Default} picked {ChatColors.Green}{mapRemovedName}{ChatColors.Default} as map {matchConfig.Maplist.Count + 1}");
+                Server.PrintToChatAll($"{chatPrefix} {ChatColors.Green}{matchzyTeam.teamName}{ChatColors.Default} picked {ChatColors.Green}{matchConfig.GetMapDisplayName(mapRemovedName)}{ChatColors.Default} as map {matchConfig.Maplist.Count + 1}");
             }
 
             matchConfig.Maplist.Add(mapRemovedName);
@@ -378,7 +379,7 @@ namespace MatchZy
 
             if (team != 0) {
                 matchzyTeam = (team == 2) ? reverseTeamSides["TERRORIST"] : reverseTeamSides["CT"];
-                Server.PrintToChatAll($"{chatPrefix} {ChatColors.Green}{matchzyTeam.teamName}{ChatColors.Default} banned {ChatColors.LightRed}{mapRemovedName}{ChatColors.Default}");
+                Server.PrintToChatAll($"{chatPrefix} {ChatColors.Green}{matchzyTeam.teamName}{ChatColors.Default} banned {ChatColors.LightRed}{matchConfig.GetMapDisplayName(mapRemovedName)}{ChatColors.Default}");
             }
 
             var mapMapVetoedEvent = new MatchZyMapVetoedEvent
@@ -434,7 +435,7 @@ namespace MatchZy
             int mapNumber = matchConfig.CurrentMapNumber;
 
             for (int i = mapNumber; i < matchConfig.Maplist.Count; i++) {
-                Server.PrintToChatAll($"{chatPrefix} Map {i + 1 - mapNumber}: {matchConfig.Maplist[i]}.");
+                Server.PrintToChatAll($"{chatPrefix} Map {i + 1 - mapNumber}: {matchConfig.GetMapDisplayName(matchConfig.Maplist[i])}.");
             }
 
             string currentMapName = Server.MapName;
@@ -559,8 +560,8 @@ namespace MatchZy
             string mapName = matchConfig.Maplist[^1];
             Team matchzyTeam = (team == CsTeam.CounterTerrorist) ? reverseTeamSides["CT"] : reverseTeamSides["TERRORIST"];
             string teamString = (matchzyTeam == matchzyTeam1) ? "team1" : "team2";
-            
-            Server.PrintToChatAll($"{chatPrefix} {ChatColors.Green}{matchzyTeam.teamName}{ChatColors.Default} must now pick a side to play on {ChatColors.Green}{mapName}{ChatColors.Default}");
+
+            Server.PrintToChatAll($"{chatPrefix} {ChatColors.Green}{matchzyTeam.teamName}{ChatColors.Default} must now pick a side to play on {ChatColors.Green}{matchConfig.GetMapDisplayName(mapName)}{ChatColors.Default}");
 
             int client = vetoCaptains[teamString];
             if (playerData.ContainsKey(client) && playerData[client].IsValid)
@@ -648,7 +649,7 @@ namespace MatchZy
 
             Team matchzyTeam = (team == "team1") ? matchzyTeam1 : matchzyTeam2;
 
-            Server.PrintToChatAll($"{chatPrefix} {ChatColors.Green}{matchzyTeam.teamName}{ChatColors.Default} elected to start as {ChatColors.Green}{sideFormatted}{ChatColors.Default} on {ChatColors.Green}{mapName}{ChatColors.Default}.");
+            Server.PrintToChatAll($"{chatPrefix} {ChatColors.Green}{matchzyTeam.teamName}{ChatColors.Default} elected to start as {ChatColors.Green}{sideFormatted}{ChatColors.Default} on {ChatColors.Green}{matchConfig.GetMapDisplayName(mapName)}{ChatColors.Default}.");
 
             var sidePickedEvent = new MatchZySidePickedEvent
             {

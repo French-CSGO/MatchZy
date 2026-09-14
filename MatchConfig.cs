@@ -13,6 +13,14 @@ namespace MatchZy
         [JsonPropertyName("maps_pool")]
         public List<string> MapsPool { get; set; } = new List<string>();
 
+        // Optional technical-id -> display-name overrides (e.g. a Steam Workshop file id
+        // like "3081538" -> "My Custom Map"). Everything that loads or reports a map
+        // (host_workshop_map, stats, webhook events) must keep using the raw id from
+        // Maplist/MapsPool - this is only ever read through GetMapDisplayName() for text
+        // shown to players in chat.
+        [JsonPropertyName("maps_display_names")]
+        public Dictionary<string, string> MapsDisplayNames { get; set; } = new();
+
         [JsonPropertyName("maps_left_in_veto_pool")]
         public List<string> MapsLeftInVetoPool { get; set; } = new List<string>();
 
@@ -72,5 +80,18 @@ namespace MatchZy
 
         [JsonPropertyName("remote_log_header_value")]
         public string RemoteLogHeaderValue { get; set; } = "";
+
+        // Resolves a map's technical id to a human-readable name for chat/UI text, using
+        // the API-provided override when there is one and falling back to the id itself
+        // otherwise (a classic map id like "de_dust2" is already readable; a bare
+        // Workshop file id like "3081538" has no other way to get a name).
+        public string GetMapDisplayName(string mapId)
+        {
+            if (MapsDisplayNames != null && MapsDisplayNames.TryGetValue(mapId, out string? displayName) && !string.IsNullOrWhiteSpace(displayName))
+            {
+                return displayName;
+            }
+            return mapId;
+        }
     }
 }
