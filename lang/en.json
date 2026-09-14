@@ -7,6 +7,11 @@
   "matchzy.veto.coinchoiceprompt": "Use {green}.vetostart{default} to start the veto, or {yellow}.vetoswap{default} to give {green}{0}{default} the first action.",
   "matchzy.veto.chosetostart": "{green}{0}{default} chose to start the veto.",
   "matchzy.veto.chosetoswap": "{green}{0}{default} swapped — {green}{1}{default} will start the veto.",
+  "matchzy.veto.rpsstart": "Rock-Paper-Scissors! The winner decides who starts the veto. Use {green}.rock{default}, {green}.paper{default} or {green}.scissors{default}.",
+  "matchzy.veto.rpschoicemade": "{green}{0}{default} has made their choice.",
+  "matchzy.veto.rpsreveal": "{green}{0}{default}: {yellow}{1}{default}  vs  {green}{2}{default}: {yellow}{3}{default}",
+  "matchzy.veto.rpstie": "It's a tie! Playing again...",
+  "matchzy.veto.rpswinner": "{green}{0}{default} won Rock-Paper-Scissors!",
 
   "matchzy.knife.sidedecisionpending": "{green}{0}{default} won the knife round. Waiting for them to type {green}.stay{default} or {green}.switch{default}.",
   "matchzy.knife.decidedtostay": "{green}{0}{default} has decided to stay.",
