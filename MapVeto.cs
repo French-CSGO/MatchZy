@@ -24,6 +24,17 @@ namespace MatchZy
             {"team2", -1}
         };
 
+        // Rock-Paper-Scissors, played before the veto starts - the winner is the one who
+        // gets to decide (via .vetostart/.vetoswap) which team acts first in the veto.
+        public bool isRpsPending = false;
+        public Dictionary<string, string?> rpsChoices = new(){
+            {"team1", null},
+            {"team2", null}
+        };
+        // Which team currently holds the .vetostart/.vetoswap choice - set to the RPS
+        // winner once RPS resolves.
+        public string vetoFirstChoiceTeam = "team1";
+
         public CsTeam lastVetoTeam = CsTeam.None;
 
         public void CreateVeto()
@@ -80,37 +91,7 @@ namespace MatchZy
                 else if (IsSimulatingTeam2)
                     Server.PrintToChatAll($"{chatPrefix} Captain for {ChatColors.Green}{matchzyTeam2.teamName}{ChatColors.Default}: {ChatColors.Yellow}[Simulated]{ChatColors.Default}");
 
-                isVetoFirstChoicePending = true;
-                Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.coinchoicepending", matchzyTeam1.teamName]}");
-                if (team1CaptainValid)
-                    playerData[team1Captain].PrintToChat($"{chatPrefix} {Localizer["matchzy.veto.coinchoiceprompt", matchzyTeam2.teamName]}");
-                if (IsSimulatingTeam1)
-                {
-                    AddTimer(2.0f, () => {
-                        if (!isVeto || !isVetoFirstChoicePending) return;
-                        isVetoFirstChoicePending = false;
-                        bool doStart = new Random().Next(2) == 0;
-                        if (doStart)
-                        {
-                            Server.PrintToChatAll($"{chatPrefix} [Simulate] {matchzyTeam1.teamName} chose to start veto first.");
-                            HandleVetoStep();
-                        }
-                        else
-                        {
-                            for (int i = 0; i < matchConfig.MapBanOrder.Count; i++)
-                            {
-                                if (matchConfig.MapBanOrder[i].StartsWith("team1_"))
-                                    matchConfig.MapBanOrder[i] = "team2_" + matchConfig.MapBanOrder[i].Substring(6);
-                                else if (matchConfig.MapBanOrder[i].StartsWith("team2_"))
-                                    matchConfig.MapBanOrder[i] = "team1_" + matchConfig.MapBanOrder[i].Substring(6);
-                            }
-                            Server.PrintToChatAll($"{chatPrefix} [Simulate] {matchzyTeam1.teamName} gave first veto to {matchzyTeam2.teamName}.");
-                            HandleVetoStep();
-                        }
-                    });
-                }
-                else if (IsSimulatingTeam2)
-                    Server.PrintToChatAll($"{chatPrefix} [Simulate] Any captain can use {ChatColors.Green}.vetostart{ChatColors.Default} or {ChatColors.Yellow}.vetoswap{ChatColors.Default}");
+                StartRps();
 
                 vetoStateTimer?.Kill();
                 vetoStateTimer = null;
@@ -120,6 +101,160 @@ namespace MatchZy
             int secondsRemaining = vetoCountdownTime - warningsPrinted + 1;
             Server.PrintToChatAll($"{chatPrefix} Map selection commencing in {secondsRemaining}");
         }
+
+        public void StartRps()
+        {
+            isRpsPending = true;
+            rpsChoices["team1"] = null;
+            rpsChoices["team2"] = null;
+
+            Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.rpsstart"]}");
+
+            if (IsSimulatingTeam1) AutoPlayRps("team1");
+            if (IsSimulatingTeam2) AutoPlayRps("team2");
+        }
+
+        public void AutoPlayRps(string team)
+        {
+            AddTimer(2.0f, () => {
+                if (!isVeto || !isRpsPending || rpsChoices[team] != null) return;
+                string[] moves = { "rock", "paper", "scissors" };
+                string move = moves[new Random().Next(moves.Length)];
+                Server.PrintToChatAll($"{chatPrefix} [Simulate] {ChatColors.Green}{(team == "team1" ? matchzyTeam1.teamName : matchzyTeam2.teamName)}{ChatColors.Default} has made their choice.");
+                SubmitRpsChoice(team, move);
+            });
+        }
+
+        public void HandleRpsChoice(CCSPlayerController? player, string move)
+        {
+            if (player == null || !isVeto || !isRpsPending) return;
+            string? team = null;
+            if (player.UserId == vetoCaptains["team1"]) team = "team1";
+            else if (player.UserId == vetoCaptains["team2"]) team = "team2";
+            if (team == null || rpsChoices[team] != null) return;
+            SubmitRpsChoice(team, move);
+        }
+
+        public void SubmitRpsChoice(string team, string move)
+        {
+            rpsChoices[team] = move;
+            Team matchzyTeam = team == "team1" ? matchzyTeam1 : matchzyTeam2;
+            // Don't reveal the move itself yet - only confirm it was locked in, so the
+            // other captain can't just counter-pick after seeing it in chat.
+            Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.rpschoicemade", matchzyTeam.teamName]}");
+
+            if (rpsChoices["team1"] != null && rpsChoices["team2"] != null)
+            {
+                ResolveRps();
+            }
+        }
+
+        public void ResolveRps()
+        {
+            string move1 = rpsChoices["team1"]!;
+            string move2 = rpsChoices["team2"]!;
+
+            Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.rpsreveal", matchzyTeam1.teamName, CapitalizeFirst(move1), matchzyTeam2.teamName, CapitalizeFirst(move2)]}");
+
+            string? winnerTeam = RpsWinner(move1, move2);
+            if (winnerTeam == null)
+            {
+                Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.rpstie"]}");
+                rpsChoices["team1"] = null;
+                rpsChoices["team2"] = null;
+                if (IsSimulatingTeam1) AutoPlayRps("team1");
+                if (IsSimulatingTeam2) AutoPlayRps("team2");
+                return;
+            }
+
+            isRpsPending = false;
+            Team winningMatchzyTeam = winnerTeam == "team1" ? matchzyTeam1 : matchzyTeam2;
+            Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.rpswinner", winningMatchzyTeam.teamName]}");
+
+            StartVetoFirstChoice(winnerTeam);
+        }
+
+        private static string? RpsWinner(string move1, string move2)
+        {
+            if (move1 == move2) return null;
+            bool team1Wins = (move1 == "rock" && move2 == "scissors") ||
+                              (move1 == "paper" && move2 == "rock") ||
+                              (move1 == "scissors" && move2 == "paper");
+            return team1Wins ? "team1" : "team2";
+        }
+
+        private static string CapitalizeFirst(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            return char.ToUpperInvariant(value[0]) + value.Substring(1);
+        }
+
+        // Grants the given team (the RPS winner) the .vetostart/.vetoswap choice - same
+        // coin-flip-style prompt as before, just directed at whichever team actually won
+        // instead of always team1.
+        public void StartVetoFirstChoice(string chooserTeam)
+        {
+            isVetoFirstChoicePending = true;
+            vetoFirstChoiceTeam = chooserTeam;
+
+            Team chooserMatchzyTeam = chooserTeam == "team1" ? matchzyTeam1 : matchzyTeam2;
+            Team otherMatchzyTeam = chooserTeam == "team1" ? matchzyTeam2 : matchzyTeam1;
+            int chooserCaptain = vetoCaptains[chooserTeam];
+            bool chooserCaptainValid = playerData.ContainsKey(chooserCaptain) && playerData[chooserCaptain].IsValid;
+            bool chooserIsSimulating = (chooserTeam == "team1" && IsSimulatingTeam1) || (chooserTeam == "team2" && IsSimulatingTeam2);
+
+            Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.coinchoicepending", chooserMatchzyTeam.teamName]}");
+            if (chooserCaptainValid)
+                playerData[chooserCaptain].PrintToChat($"{chatPrefix} {Localizer["matchzy.veto.coinchoiceprompt", otherMatchzyTeam.teamName]}");
+
+            if (chooserIsSimulating)
+            {
+                AddTimer(2.0f, () => {
+                    if (!isVeto || !isVetoFirstChoicePending) return;
+                    isVetoFirstChoicePending = false;
+                    bool doStart = new Random().Next(2) == 0;
+                    // The ban order defaults to team1 acting first - only swap it when
+                    // the outcome actually needs team2 to go first instead.
+                    bool needsSwap = (chooserTeam == "team1") ? !doStart : doStart;
+                    if (needsSwap) SwapMapBanOrderTeams();
+                    if (doStart)
+                        Server.PrintToChatAll($"{chatPrefix} [Simulate] {chooserMatchzyTeam.teamName} chose to start veto first.");
+                    else
+                        Server.PrintToChatAll($"{chatPrefix} [Simulate] {chooserMatchzyTeam.teamName} gave first veto to {otherMatchzyTeam.teamName}.");
+                    HandleVetoStep();
+                });
+            }
+            else
+            {
+                // Only the choosing team needs to act - if the other team happens to be
+                // simulated, note that any real captain can still drive this manually.
+                bool otherIsSimulating = chooserTeam == "team1" ? IsSimulatingTeam2 : IsSimulatingTeam1;
+                if (otherIsSimulating)
+                    Server.PrintToChatAll($"{chatPrefix} [Simulate] Any captain can use {ChatColors.Green}.vetostart{ChatColors.Default} or {ChatColors.Yellow}.vetoswap{ChatColors.Default}");
+            }
+        }
+
+        public void SwapMapBanOrderTeams()
+        {
+            // Swap all team1_* <-> team2_* entries in the ban order so the other team
+            // goes first.
+            for (int i = 0; i < matchConfig.MapBanOrder.Count; i++)
+            {
+                if (matchConfig.MapBanOrder[i].StartsWith("team1_"))
+                    matchConfig.MapBanOrder[i] = "team2_" + matchConfig.MapBanOrder[i].Substring(6);
+                else if (matchConfig.MapBanOrder[i].StartsWith("team2_"))
+                    matchConfig.MapBanOrder[i] = "team1_" + matchConfig.MapBanOrder[i].Substring(6);
+            }
+        }
+
+        [ConsoleCommand("css_rock", "Rock-Paper-Scissors: pick rock")]
+        public void OnRpsRockCommand(CCSPlayerController? player, CommandInfo? command) => HandleRpsChoice(player, "rock");
+
+        [ConsoleCommand("css_paper", "Rock-Paper-Scissors: pick paper")]
+        public void OnRpsPaperCommand(CCSPlayerController? player, CommandInfo? command) => HandleRpsChoice(player, "paper");
+
+        [ConsoleCommand("css_scissors", "Rock-Paper-Scissors: pick scissors")]
+        public void OnRpsScissorsCommand(CCSPlayerController? player, CommandInfo? command) => HandleRpsChoice(player, "scissors");
 
         public void HandleVetoStep()
         {
@@ -244,43 +379,40 @@ namespace MatchZy
             HandeMapBanCommand(player, mapArg);
         }
 
-        [ConsoleCommand("css_vetostart", "Start the veto (team1 captain only, during coin flip)")]
+        [ConsoleCommand("css_vetostart", "Start the veto (the RPS-winning captain only)")]
         public void OnVetoStartCommand(CCSPlayerController? player, CommandInfo? command)
         {
             if (player == null || !isVeto || !isVetoFirstChoicePending) return;
-            bool isTeam1Captain = player.UserId == vetoCaptains["team1"];
-            bool isTeam2Captain = player.UserId == vetoCaptains["team2"];
-            if (!isTeam1Captain && !(IsSimulatingTeam2 && isTeam2Captain)) return;
+            if (player.UserId != vetoCaptains[vetoFirstChoiceTeam]) return;
 
             isVetoFirstChoicePending = false;
-            Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.chosetostart", matchzyTeam1.teamName]}");
+            // The ban order defaults to team1 acting first - only swap it when team2 won
+            // RPS and chose to start themselves.
+            if (vetoFirstChoiceTeam == "team2") SwapMapBanOrderTeams();
+            Team chooserMatchzyTeam = vetoFirstChoiceTeam == "team1" ? matchzyTeam1 : matchzyTeam2;
+            Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.chosetostart", chooserMatchzyTeam.teamName]}");
             HandleVetoStep();
         }
 
-        [ConsoleCommand("css_vetoswap", "Give the first veto action to the opposing team (team1 captain only, during coin flip)")]
+        [ConsoleCommand("css_vetoswap", "Give the first veto action to the opposing team (the RPS-winning captain only)")]
         public void OnVetoSwapCommand(CCSPlayerController? player, CommandInfo? command)
         {
             if (player == null || !isVeto || !isVetoFirstChoicePending) return;
-            bool isTeam1CaptainSwap = player.UserId == vetoCaptains["team1"];
-            bool isTeam2CaptainSwap = player.UserId == vetoCaptains["team2"];
-            if (!isTeam1CaptainSwap && !(IsSimulatingTeam2 && isTeam2CaptainSwap)) return;
+            if (player.UserId != vetoCaptains[vetoFirstChoiceTeam]) return;
 
             isVetoFirstChoicePending = false;
-            // Swap all team1_* <-> team2_* entries in the ban order so team2 goes first
-            for (int i = 0; i < matchConfig.MapBanOrder.Count; i++)
-            {
-                if (matchConfig.MapBanOrder[i].StartsWith("team1_"))
-                    matchConfig.MapBanOrder[i] = "team2_" + matchConfig.MapBanOrder[i].Substring(6);
-                else if (matchConfig.MapBanOrder[i].StartsWith("team2_"))
-                    matchConfig.MapBanOrder[i] = "team1_" + matchConfig.MapBanOrder[i].Substring(6);
-            }
-            Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.chosetoswap", matchzyTeam1.teamName, matchzyTeam2.teamName]}");
+            // The ban order defaults to team1 acting first - only swap it when team1 won
+            // RPS and gave the first action away.
+            if (vetoFirstChoiceTeam == "team1") SwapMapBanOrderTeams();
+            Team chooserMatchzyTeam = vetoFirstChoiceTeam == "team1" ? matchzyTeam1 : matchzyTeam2;
+            Team otherMatchzyTeam = vetoFirstChoiceTeam == "team1" ? matchzyTeam2 : matchzyTeam1;
+            Server.PrintToChatAll($"{chatPrefix} {Localizer["matchzy.veto.chosetoswap", chooserMatchzyTeam.teamName, otherMatchzyTeam.teamName]}");
             HandleVetoStep();
         }
 
         public void HandeMapBanCommand(CCSPlayerController player, string map)
         {
-            if (!isVeto || isVetoFirstChoicePending || SidePickPending() || player == null || map == null) return;
+            if (!isVeto || isRpsPending || isVetoFirstChoicePending || SidePickPending() || player == null || map == null) return;
 
             int playerTeam = player.TeamNum;
             string currentTeamToBan;
@@ -309,7 +441,7 @@ namespace MatchZy
 
         public void HandeMapPickCommand(CCSPlayerController player, string map)
         {
-            if (!isVeto || isVetoFirstChoicePending || SidePickPending() || player == null || map == null) return;
+            if (!isVeto || isRpsPending || isVetoFirstChoicePending || SidePickPending() || player == null || map == null) return;
 
             int playerTeam = player.TeamNum;
             string currentTeamToPick;
@@ -406,6 +538,9 @@ namespace MatchZy
             isPreVeto = true;
             isVeto = false;
             isVetoFirstChoicePending = false;
+            isRpsPending = false;
+            rpsChoices["team1"] = null;
+            rpsChoices["team2"] = null;
             if (isPaused)
             {
                 UnpauseMatch();
