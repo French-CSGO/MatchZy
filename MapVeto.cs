@@ -367,15 +367,17 @@ namespace MatchZy
         public void OnPickMapCommand(CCSPlayerController? player, CommandInfo? command) {
             if (player == null || command == null) return;
             if (command.ArgCount < 1) return;
-            string mapArg = command.ArgByIndex(1);
+            // ArgString (not ArgByIndex(1)) so a multi-word display name like
+            // "Brigue Auralite" is passed through whole instead of just its first word.
+            string mapArg = command.ArgString.Trim();
             HandeMapPickCommand(player, mapArg);
         }
 
         [ConsoleCommand("css_ban", "Bans map")]
-        public void OnBanMapCommand(CCSPlayerController? player, CommandInfo? command) { 
+        public void OnBanMapCommand(CCSPlayerController? player, CommandInfo? command) {
             if (player == null || command == null) return;
             if (command.ArgCount < 1) return;
-            string mapArg = command.ArgByIndex(1);
+            string mapArg = command.ArgString.Trim();
             HandeMapBanCommand(player, mapArg);
         }
 
@@ -656,11 +658,15 @@ namespace MatchZy
         public (bool, string) RemoveMapFromMapPool(string mapName) {
             string mapRemoved = "";
             int eraseIndex = -1;
-            // First check if we have a single match with a substring.
+            // First check if we have a single match with a substring - against either
+            // the technical id or its display name (e.g. a Workshop map's custom name),
+            // since players type whatever they see in the "Remaining Maps" chat line.
             if (mapName.Length >= 4) {
                 for (int i = 0; i < matchConfig.MapsLeftInVetoPool.Count; i++) {
                     mapRemoved = matchConfig.MapsLeftInVetoPool[i];
-                    if (mapRemoved.IndexOf(mapName, StringComparison.OrdinalIgnoreCase) > -1) {
+                    string displayName = matchConfig.GetMapDisplayName(mapRemoved);
+                    if (mapRemoved.IndexOf(mapName, StringComparison.OrdinalIgnoreCase) > -1 ||
+                        displayName.IndexOf(mapName, StringComparison.OrdinalIgnoreCase) > -1) {
                         if (eraseIndex >= 0) {
                             eraseIndex = -1;  // If more than one match, reset and break.
                             break;
@@ -673,7 +679,8 @@ namespace MatchZy
             if (eraseIndex == -1) {
                 for (int i = 0; i < matchConfig.MapsLeftInVetoPool.Count; i++) {
                     mapRemoved = matchConfig.MapsLeftInVetoPool[i];
-                    if (mapRemoved == mapName) {
+                    if (mapRemoved.Equals(mapName, StringComparison.OrdinalIgnoreCase) ||
+                        matchConfig.GetMapDisplayName(mapRemoved).Equals(mapName, StringComparison.OrdinalIgnoreCase)) {
                         eraseIndex = i;
                         break;
                     }
