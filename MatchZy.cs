@@ -433,6 +433,12 @@ namespace MatchZy
                     } else {
                         HandleRpsChoice(player, rpsMove);
                     }
+                    // Mirrors CS#'s own silent chat trigger ("/" instead of "!"): a
+                    // real [ConsoleCommand] triggered with "/" isn't echoed to chat,
+                    // but Rock-Paper-Scissors picks aren't console commands (Teamonly
+                    // can only be read off the raw chat event), so that silencing
+                    // doesn't happen automatically and has to be replicated here.
+                    if (originalMessage.StartsWith("/")) return HookResult.Stop;
                 }
 
                 if (message.StartsWith(".map"))

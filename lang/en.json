@@ -7,7 +7,7 @@
   "matchzy.veto.coinchoiceprompt": "Use {green}.vetostart{default} to start the veto, or {yellow}.vetoswap{default} to give {green}{0}{default} the first action.",
   "matchzy.veto.chosetostart": "{green}{0}{default} chose to start the veto.",
   "matchzy.veto.chosetoswap": "{green}{0}{default} swapped — {green}{1}{default} will start the veto.",
-  "matchzy.veto.rpsstart": "Rock-Paper-Scissors! The winner decides who starts the veto. In {yellow}TEAM CHAT ONLY{default}, type {green}rock{default}, {green}paper{default} or {green}scissors{default}.",
+  "matchzy.veto.rpsstart": "Rock-Paper-Scissors! The winner decides who starts the veto. In {yellow}TEAM CHAT ONLY{default}, type {green}rock{default}, {green}paper{default} or {green}scissors{default} (prefix with {green}/{default} to keep it out of chat).",
   "matchzy.veto.rpsteamchatonly": "Send your Rock-Paper-Scissors pick to {yellow}team chat{default} only, not all chat - the other team can already see it otherwise.",
   "matchzy.veto.rpschoicemade": "{green}{0}{default} has made their choice.",
   "matchzy.veto.rpsreveal": "{green}{0}{default}: {yellow}{1}{default}  vs  {green}{2}{default}: {yellow}{3}{default}",
