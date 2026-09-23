@@ -23,6 +23,8 @@ namespace MatchZy
 
         public FakeConVar<bool> everyoneIsAdmin = new("matchzy_everyone_is_admin", "If set to true, all the players will have admin privilege. Default: false", false);
 
+        public FakeConVar<bool> readyClanTagEnabled = new("matchzy_ready_clantag_enabled", "Whether to show the READY / NOT READY status of players in their clan tag during the ready phase. Default: true", true);
+
         public FakeConVar<bool> showCreditsOnMatchStart = new("matchzy_show_credits_on_match_start", "Whether to show 'MatchZy Plugin by WD-' message on match start. Default: true", true);
 
         public FakeConVar<string> hostnameFormat = new("matchzy_hostname_format", "The server hostname to use. Set to \"\" to disable/use existing. Default: MatchZy | {TEAM1} vs {TEAM2}", "MatchZy | {TEAM1} vs {TEAM2}");

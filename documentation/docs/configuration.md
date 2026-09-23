@@ -120,6 +120,9 @@ Example: `matchzy_demo_upload_url "https://your-website.com/upload-endpoint"` <b
 ####`matchzy_everyone_is_admin`
 :   If set to true, everyone will be granted admin permissions for MatchZy.<br>**`Default: false`**
 
+####`matchzy_ready_clantag_enabled`
+:   Whether to show the `[READY]` / `[NOT READY]` status of players in their clan tag during the ready phase (warmup). The tag is removed once the match starts. Tag texts can be customized with the `matchzy.clantag.ready` and `matchzy.clantag.notready` keys in the `lang/` files.<br>**`Default: true`**
+
 ####`matchzy_show_credits_on_match_start`
 :   Whether to show 'MatchZy Plugin by WD-' message on match start.<br>**`Default: true`**
 

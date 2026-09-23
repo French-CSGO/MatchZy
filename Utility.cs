@@ -853,41 +853,45 @@ namespace MatchZy
             }
         }
 
+        // Clan tags applied by the ready system, so we only clear tags that we set ourselves
+        private readonly HashSet<string> readyClanTags = new();
+
         public void HandleClanTags()
         {
-            // Currently it is not possible to keep updating player tags while in warmup without restarting the match
-            // Hence returning from here until we find a proper solution
-            return;
+            string readyTag = Localizer["matchzy.clantag.ready"];
+            string notReadyTag = Localizer["matchzy.clantag.notready"];
+            readyClanTags.Add(readyTag);
+            readyClanTags.Add(notReadyTag);
 
-            if (readyAvailable && !matchStarted)
+            bool showReadyTags = readyClanTagEnabled.Value && readyAvailable && !matchStarted && !isPractice && !isSleep;
+            HashSet<CCSPlayerController> coaches = GetAllCoaches();
+
+            foreach (var key in playerData.Keys)
             {
-                foreach (var key in playerData.Keys)
+                var player = playerData[key];
+                if (!IsPlayerValid(player) || player.IsBot || player.IsHLTV) continue;
+                // Coaches keep their COACH tag
+                if (coaches.Contains(player)) continue;
+
+                string newClan;
+                if (showReadyTags)
                 {
-                    if (playerReadyStatus[key])
-                    {
-                        playerData[key].Clan = "[Ready]";
-                    }
-                    else
-                    {
-                        playerData[key].Clan = "[Unready]";
-                    }
-                    Server.PrintToChatAll($"PlayerName: {playerData[key].PlayerName} Clan: {playerData[key].Clan}");
+                    bool isReady = playerReadyStatus.TryGetValue(key, out bool ready) && ready;
+                    newClan = isReady ? readyTag : notReadyTag;
                 }
-            }
-            else if (matchStarted)
-            {
-                foreach (var key in playerData.Keys)
+                else if (readyClanTags.Contains(player.Clan))
                 {
-                    if (playerData[key].TeamNum == 2)
-                    {
-                        playerData[key].Clan = reverseTeamSides["TERRORIST"].teamTag;
-                    }
-                    else if (playerData[key].TeamNum == 3)
-                    {
-                        playerData[key].Clan = reverseTeamSides["CT"].teamTag;
-                    }
-                    Server.PrintToChatAll($"PlayerName: {playerData[key].PlayerName} Clan: {playerData[key].Clan}");
+                    // Ready phase is over, remove the ready tag (and restore the admin tag if needed)
+                    newClan = loadedAdmins.ContainsKey(player.SteamID.ToString()) ? "[Admin]" : "";
                 }
+                else
+                {
+                    continue;
+                }
+
+                if (player.Clan == newClan) continue;
+                player.Clan = newClan;
+                Utilities.SetStateChanged(player, "CCSPlayerController", "m_szClan");
             }
         }
 

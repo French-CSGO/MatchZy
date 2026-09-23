@@ -1,5 +1,12 @@
 # MatchZy Changelog
 
+# 0.8.22
+
+#### September 23, 2026
+
+- Players now show their ready status in their clan tag (`[READY]` / `[NOT READY]`) during the ready phase. The tag is removed when the match starts (admins get their `[Admin]` tag back, coaches keep their `COACH` tag).
+- Added `matchzy_ready_clantag_enabled` (default: `true`) to toggle this behaviour. Tag texts can be customized with the `matchzy.clantag.ready` / `matchzy.clantag.notready` localization keys.
+
 # 0.8.20
 
 #### March 20, 2026
