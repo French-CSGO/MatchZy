@@ -4,6 +4,7 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Modules.Events;
+using CounterStrikeSharp.API.Modules.Timers;
 
 
 namespace MatchZy
@@ -14,7 +15,7 @@ namespace MatchZy
 
         public override string ModuleName => "MatchZy";
 
-        public override string ModuleVersion => "0.8.21.5";
+        public override string ModuleVersion => "0.8.22";
 
         public override string ModuleAuthor => "WD- (https://github.com/shobhit-pathak/)";
 
@@ -325,6 +326,9 @@ namespace MatchZy
             //     ResetMatch();
             //     return HookResult.Continue;
             // });
+
+            // Keeps READY / NOT READY clan tags in sync (the game can reset them, e.g. on team change or map change)
+            AddTimer(1.0f, HandleClanTags, TimerFlags.REPEAT);
 
             RegisterListener<Listeners.OnMapStart>(mapName => {
                 AddTimer(1.0f, () => {

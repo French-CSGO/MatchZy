@@ -125,5 +125,7 @@
     "matchzy.pracc.molotov": "Коктейль Молотова, брошенный {red}{0}{default}, взорвался через {green}{1}{default}с",
     "matchzy.pracc.decoy": "Ложная граната, брошенная {red}{0}{default}, взорвалась через {green}{1}{default}с",
     "matchzy.pracc.damage": "{red}{0}{default} урона по {lightblue}{1}{default}({green}{2}{default} здоровья)",
-    "matchzy.pracc.blind": "{lightblue}{0}{default} был ослеплён на {green}{1}{default}с"
+    "matchzy.pracc.blind": "{lightblue}{0}{default} был ослеплён на {green}{1}{default}с",
+    "matchzy.clantag.ready": "[READY]",
+    "matchzy.clantag.notready": "[NOT READY]"
 }
