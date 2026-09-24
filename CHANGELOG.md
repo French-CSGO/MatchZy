@@ -4,7 +4,7 @@
 
 #### September 24, 2026
 
-- Fixed Valve round backups never being found when Metamod is installed: CS2 writes them in `csgo/addons/metamod/` (first `Game` search path of `gameinfo.gi`), MatchZy now looks there as well as in `csgo/`. Previously the `valve_backup` field of MatchZy backups was empty and rounds could not be restored.
+- Fixed Valve round backups never being found: depending on the CS2 version / `gameinfo.gi` search paths, CS2 writes them in `csgo/backups/` or `csgo/addons/metamod/` (Metamod). MatchZy now looks in `csgo/backups/`, `csgo/` and `csgo/addons/metamod/`, and writes restored backups in `csgo/backups/` and `csgo/`. Previously the `valve_backup` field of MatchZy backups was empty and rounds could not be restored.
 - Fixed restoring a backup from another map when the map is a workshop map: the workshop id is now stored in backups (`map_id`) and used to change map, with a fallback to `ds_workshop_changelevel`.
 - The `mp_backup_round_file` prefix is now re-applied on map start, after the live config is executed and before loading a Valve backup.
 - Added a log line when the Valve backup file of the current round cannot be found.

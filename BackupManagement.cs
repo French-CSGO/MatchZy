@@ -32,15 +32,21 @@ namespace MatchZy
         public string backupUploadHeaderValue = "";
 
 
-        // CS2 writes Valve round backups in the first writable "Game" search path of gameinfo.gi.
-        // With Metamod installed, csgo/addons/metamod comes first, so the files end up there instead of csgo/.
-        private string GetValveBackupFilePath(string fileName)
+        // Depending on the CS2 version and the gameinfo.gi search paths (Metamod adds csgo/addons/metamod first),
+        // Valve round backups can be written in csgo/backups, csgo or csgo/addons/metamod.
+        private string[] GetValveBackupDirs()
         {
-            string[] candidateDirs =
+            return
             [
+                Path.Combine(Server.GameDirectory, "csgo", "backups"),
                 Path.Combine(Server.GameDirectory, "csgo"),
                 Path.Combine(Server.GameDirectory, "csgo", "addons", "metamod"),
             ];
+        }
+
+        private string GetValveBackupFilePath(string fileName)
+        {
+            string[] candidateDirs = GetValveBackupDirs();
             foreach (var dir in candidateDirs)
             {
                 string path = Path.Combine(dir, fileName);
@@ -386,10 +392,14 @@ namespace MatchZy
                     }
                     string tempFilePath = Path.Combine(Server.GameDirectory, "csgo", tempFileName);
 
-
-                    if (!File.Exists(tempFilePath))
+                    // Write the Valve backup where CS2 may look for it (csgo/backups on recent versions, csgo otherwise)
+                    foreach (var dir in GetValveBackupDirs().Take(2))
                     {
-                        File.WriteAllText(tempFilePath, valveBackup);
+                        string path = Path.Combine(dir, tempFileName);
+                        if (Directory.Exists(dir) && !File.Exists(path))
+                        {
+                            File.WriteAllText(path, valveBackup);
+                        }
                     }
                     int restoreTimer = liveSetupRequired ? 2 : 0;
                     if (liveSetupRequired)
