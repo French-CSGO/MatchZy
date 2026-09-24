@@ -32,6 +32,23 @@ namespace MatchZy
         public string backupUploadHeaderValue = "";
 
 
+        // CS2 writes Valve round backups in the first writable "Game" search path of gameinfo.gi.
+        // With Metamod installed, csgo/addons/metamod comes first, so the files end up there instead of csgo/.
+        private string GetValveBackupFilePath(string fileName)
+        {
+            string[] candidateDirs =
+            [
+                Path.Combine(Server.GameDirectory, "csgo"),
+                Path.Combine(Server.GameDirectory, "csgo", "addons", "metamod"),
+            ];
+            foreach (var dir in candidateDirs)
+            {
+                string path = Path.Combine(dir, fileName);
+                if (File.Exists(path)) return path;
+            }
+            return Path.Combine(candidateDirs[0], fileName);
+        }
+
         public void SetupRoundBackupFile()
         {
             string backupFilePrefix = $"matchzy_{liveMatchId}_{matchConfig.CurrentMapNumber}";
@@ -430,9 +447,9 @@ namespace MatchZy
                 }
 
                 var gameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!;
-                string lastBackupFilePath = $"matchzy_{liveMatchId}_{matchConfig.CurrentMapNumber}_round{round}.txt"; ;
-                bool lastBackupExists = File.Exists(Path.Combine(Server.GameDirectory, "csgo", lastBackupFilePath));
-                lastBackupFilePath = Path.Combine(Server.GameDirectory, "csgo", lastBackupFilePath);
+                string valveBackupFileName = $"matchzy_{liveMatchId}_{matchConfig.CurrentMapNumber}_round{round}.txt";
+                string lastBackupFilePath = GetValveBackupFilePath(valveBackupFileName);
+                bool lastBackupExists = File.Exists(lastBackupFilePath);
 
                 if (!lastBackupExists)
                 {
