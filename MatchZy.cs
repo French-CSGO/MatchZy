@@ -15,7 +15,7 @@ namespace MatchZy
 
         public override string ModuleName => "MatchZy";
 
-        public override string ModuleVersion => "0.8.22";
+        public override string ModuleVersion => "0.8.23";
 
         public override string ModuleAuthor => "WD- (https://github.com/shobhit-pathak/)";
 
@@ -338,6 +338,7 @@ namespace MatchZy
                         return;
                     }
                     ExecuteChangedConvars();
+                    SetupRoundBackupFile();
                     if (isWarmup) StartWarmup();
                     if (isPractice) StartPracticeMode();
                     if (matchConfig.ChangedCvars.TryGetValue("matchzy_match_simulate", out string? simValue) && (simValue == "1" || simValue == "true"))

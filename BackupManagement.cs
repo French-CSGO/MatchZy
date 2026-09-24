@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Timers;
+using CounterStrikeSharp.API.Modules.Cvars;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -30,6 +31,23 @@ namespace MatchZy
         public string backupUploadHeaderKey = "";
         public string backupUploadHeaderValue = "";
 
+
+        // CS2 writes Valve round backups in the first writable "Game" search path of gameinfo.gi.
+        // With Metamod installed, csgo/addons/metamod comes first, so the files end up there instead of csgo/.
+        private string GetValveBackupFilePath(string fileName)
+        {
+            string[] candidateDirs =
+            [
+                Path.Combine(Server.GameDirectory, "csgo"),
+                Path.Combine(Server.GameDirectory, "csgo", "addons", "metamod"),
+            ];
+            foreach (var dir in candidateDirs)
+            {
+                string path = Path.Combine(dir, fileName);
+                if (File.Exists(path)) return path;
+            }
+            return Path.Combine(candidateDirs[0], fileName);
+        }
 
         public void SetupRoundBackupFile()
         {
@@ -316,7 +334,18 @@ namespace MatchZy
                 {
                     if (map_name != Server.MapName)
                     {
-                        ChangeMap(map_name, 0);
+                        // Workshop maps can't be loaded by name with changelevel: prefer the workshop id if we have it
+                        string mapToLoad = map_name;
+                        if (backupData.TryGetValue("map_id", out var mapId) && long.TryParse(mapId, out _))
+                        {
+                            mapToLoad = mapId;
+                        }
+                        else if (matchConfig.Maplist.Count > matchConfig.CurrentMapNumber
+                            && long.TryParse(matchConfig.Maplist[matchConfig.CurrentMapNumber], out _))
+                        {
+                            mapToLoad = matchConfig.Maplist[matchConfig.CurrentMapNumber];
+                        }
+                        ChangeMap(mapToLoad, 0);
                         isRoundRestorePending = true;
                         pendingRestoreFileName = fileName;
                         // Returning from here, backup will be restored again once the map is changed.
@@ -371,6 +400,10 @@ namespace MatchZy
                     AddTimer(restoreTimer, () => {
                         string fileName = Path.GetFileName(tempFilePath);
 
+                        // The backup prefix may have been reset by the map change / cfg execution (restore from another map),
+                        // re-apply it so that Valve keeps writing round backups after the restore.
+                        SetupRoundBackupFile();
+                        Server.ExecuteCommand("mp_backup_round_auto 1");
                         Server.ExecuteCommand($"mp_backup_restore_load_file {fileName}");
                         StartDemoRecording();
                     });
@@ -414,10 +447,14 @@ namespace MatchZy
                 }
 
                 var gameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules!;
-                string lastBackupFilePath = $"matchzy_{liveMatchId}_{matchConfig.CurrentMapNumber}_round{round}.txt"; ;
-                bool lastBackupExists = File.Exists(Path.Combine(Server.GameDirectory, "csgo", lastBackupFilePath));
-                lastBackupFilePath = Path.Combine(Server.GameDirectory, "csgo", lastBackupFilePath);
+                string valveBackupFileName = $"matchzy_{liveMatchId}_{matchConfig.CurrentMapNumber}_round{round}.txt";
+                string lastBackupFilePath = GetValveBackupFilePath(valveBackupFileName);
+                bool lastBackupExists = File.Exists(lastBackupFilePath);
 
+                if (!lastBackupExists)
+                {
+                    Log($"[CreateMatchZyRoundDataBackup] Valve backup file not found: {lastBackupFilePath} (mp_backup_round_file: {ConVar.Find("mp_backup_round_file")?.StringValue}, mp_backup_round_auto: {ConVar.Find("mp_backup_round_auto")?.GetPrimitiveValue<bool>()})");
+                }
                 string valveBackupContent = lastBackupExists ? File.ReadAllText(lastBackupFilePath) : "";
 
                 Dictionary<string, string> roundData = new()
@@ -425,6 +462,7 @@ namespace MatchZy
                         { "matchid", liveMatchId.ToString() },
                         { "timestamp", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") },
                         { "map_name", Server.MapName },
+                        { "map_id", GetCurrentMapIdentifier() },
                         { "mapnumber", matchConfig.CurrentMapNumber.ToString() },
                         { "round", round },
                         { "team1", GetTeamConfig("team1") },

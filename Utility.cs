@@ -344,6 +344,8 @@ namespace MatchZy
             {
                 HandlePlayoutConfig();
                 ExecuteChangedConvars();
+                // Make sure Valve round backups use the MatchZy prefix (it can be reset on map load)
+                SetupRoundBackupFile();
             });
         }
 
@@ -1044,7 +1046,25 @@ namespace MatchZy
                     Server.ExecuteCommand($"bot_kick");
                     Server.ExecuteCommand($"changelevel \"{mapName}\"");
                 }
+                else
+                {
+                    // Not a base map: assume a workshop map already known by the server (collection / previously downloaded)
+                    Log($"[ChangeMap] {mapName} is not a valid base map, trying ds_workshop_changelevel");
+                    Server.ExecuteCommand($"bot_kick");
+                    Server.ExecuteCommand($"ds_workshop_changelevel \"{mapName}\"");
+                }
             });
+        }
+
+        private string GetCurrentMapIdentifier()
+        {
+            // Returns the workshop id of the current map if the match config references it by id, else the map name
+            if (isMatchSetup && matchConfig.Maplist.Count > matchConfig.CurrentMapNumber)
+            {
+                string configMap = matchConfig.Maplist[matchConfig.CurrentMapNumber];
+                if (long.TryParse(configMap, out _)) return configMap;
+            }
+            return Server.MapName;
         }
 
         private string GetMatchWinnerName()
