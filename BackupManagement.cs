@@ -316,7 +316,18 @@ namespace MatchZy
                 {
                     if (map_name != Server.MapName)
                     {
-                        ChangeMap(map_name, 0);
+                        // Workshop maps can't be loaded by name with changelevel: prefer the workshop id if we have it
+                        string mapToLoad = map_name;
+                        if (backupData.TryGetValue("map_id", out var mapId) && long.TryParse(mapId, out _))
+                        {
+                            mapToLoad = mapId;
+                        }
+                        else if (matchConfig.Maplist.Count > matchConfig.CurrentMapNumber
+                            && long.TryParse(matchConfig.Maplist[matchConfig.CurrentMapNumber], out _))
+                        {
+                            mapToLoad = matchConfig.Maplist[matchConfig.CurrentMapNumber];
+                        }
+                        ChangeMap(mapToLoad, 0);
                         isRoundRestorePending = true;
                         pendingRestoreFileName = fileName;
                         // Returning from here, backup will be restored again once the map is changed.
@@ -425,6 +436,7 @@ namespace MatchZy
                         { "matchid", liveMatchId.ToString() },
                         { "timestamp", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") },
                         { "map_name", Server.MapName },
+                        { "map_id", GetCurrentMapIdentifier() },
                         { "mapnumber", matchConfig.CurrentMapNumber.ToString() },
                         { "round", round },
                         { "team1", GetTeamConfig("team1") },
