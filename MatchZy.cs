@@ -15,7 +15,7 @@ namespace MatchZy
 
         public override string ModuleName => "MatchZy";
 
-        public override string ModuleVersion => "0.8.22";
+        public override string ModuleVersion => "0.8.23";
 
         public override string ModuleAuthor => "WD- (https://github.com/shobhit-pathak/)";
 
