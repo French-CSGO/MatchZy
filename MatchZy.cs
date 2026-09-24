@@ -338,6 +338,7 @@ namespace MatchZy
                         return;
                     }
                     ExecuteChangedConvars();
+                    SetupRoundBackupFile();
                     if (isWarmup) StartWarmup();
                     if (isPractice) StartPracticeMode();
                     if (matchConfig.ChangedCvars.TryGetValue("matchzy_match_simulate", out string? simValue) && (simValue == "1" || simValue == "true"))

@@ -344,6 +344,8 @@ namespace MatchZy
             {
                 HandlePlayoutConfig();
                 ExecuteChangedConvars();
+                // Make sure Valve round backups use the MatchZy prefix (it can be reset on map load)
+                SetupRoundBackupFile();
             });
         }
 

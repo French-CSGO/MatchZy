@@ -382,6 +382,10 @@ namespace MatchZy
                     AddTimer(restoreTimer, () => {
                         string fileName = Path.GetFileName(tempFilePath);
 
+                        // The backup prefix may have been reset by the map change / cfg execution (restore from another map),
+                        // re-apply it so that Valve keeps writing round backups after the restore.
+                        SetupRoundBackupFile();
+                        Server.ExecuteCommand("mp_backup_round_auto 1");
                         Server.ExecuteCommand($"mp_backup_restore_load_file {fileName}");
                         StartDemoRecording();
                     });
