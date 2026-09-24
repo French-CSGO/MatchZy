@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Timers;
+using CounterStrikeSharp.API.Modules.Cvars;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -433,6 +434,10 @@ namespace MatchZy
                 bool lastBackupExists = File.Exists(Path.Combine(Server.GameDirectory, "csgo", lastBackupFilePath));
                 lastBackupFilePath = Path.Combine(Server.GameDirectory, "csgo", lastBackupFilePath);
 
+                if (!lastBackupExists)
+                {
+                    Log($"[CreateMatchZyRoundDataBackup] Valve backup file not found: {lastBackupFilePath} (mp_backup_round_file: {ConVar.Find("mp_backup_round_file")?.StringValue}, mp_backup_round_auto: {ConVar.Find("mp_backup_round_auto")?.GetPrimitiveValue<bool>()})");
+                }
                 string valveBackupContent = lastBackupExists ? File.ReadAllText(lastBackupFilePath) : "";
 
                 Dictionary<string, string> roundData = new()
