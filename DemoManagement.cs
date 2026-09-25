@@ -35,21 +35,33 @@ namespace MatchZy
                 Log("[StartDemoRecording] Demo recording is already in progress.");
                 return;
             }
-            string demoFileName = FormatCvarValue(demoNameFormat.Replace(" ", "_")) + ".dem";
+            // Only letters, digits, '-', '_' and '.': see DemoFileName.
+            (int team1Score, int team2Score) = GetTeamsScore();
+            string demoFileName = DemoFileName.Build(
+                demoNameFormat,
+                DateTime.Now,
+                liveMatchId,
+                Server.MapName,
+                matchConfig.CurrentMapNumber,
+                matchzyTeam1.teamName,
+                matchzyTeam2.teamName,
+                team1Score,
+                team2Score) + ".dem";
             try
             {
-                string? directoryPath = Path.GetDirectoryName(Path.Join(Server.GameDirectory + "/csgo/", demoPath));
-                if (directoryPath != null)
+                string demoDirectory = Path.Join(Server.GameDirectory + "/csgo/", DemoFileLocator.NormalizeDemoPath(demoPath));
+                if (!Directory.Exists(demoDirectory))
                 {
-                    if (!Directory.Exists(directoryPath))
-                    {
-                        Directory.CreateDirectory(directoryPath);
-                    }
+                    Directory.CreateDirectory(demoDirectory);
                 }
-                string tempDemoPath = demoPath == "" ? demoFileName : demoPath + demoFileName;
+                // Relative to csgo/: StopDemoRecording resolves it again.
+                string tempDemoPath = DemoFileLocator.NormalizeDemoPath(demoPath) + demoFileName;
                 activeDemoFile = tempDemoPath;
-                Log($"[StartDemoRecoding] Starting demo recording, path: {tempDemoPath}");
-                Server.ExecuteCommand($"tv_record {tempDemoPath}");
+                // tv_record gets the absolute path. A relative one lands in the first Game search
+                // path, which is csgo/addons/metamod/ on Metamod servers.
+                string fullPath = DemoFileLocator.TvRecordPath(Server.GameDirectory, demoPath, demoFileName);
+                Log($"[StartDemoRecoding] Starting demo recording, path: {fullPath}");
+                Server.ExecuteCommand($"tv_record {DemoFileLocator.TvRecordArgument(fullPath)}");
                 isDemoRecording = true;
             }
             catch (Exception ex)
@@ -65,7 +77,7 @@ namespace MatchZy
         public void StopDemoRecording(float delay, string activeDemoFile, long liveMatchId, int currentMapNumber)
         {
             Log($"[StopDemoRecording] Going to stop demorecording in {delay}s");
-            string demoPath = Path.Join(Server.GameDirectory + "/csgo/", activeDemoFile);
+            IReadOnlyList<string> demoPaths = DemoFileLocator.CandidatePaths(Server.GameDirectory, activeDemoFile);
             (int t1score, int t2score) = GetTeamsScore();
             int roundNumber = t1score + t2score;
             AddTimer(delay, () =>
@@ -83,6 +95,8 @@ namespace MatchZy
                 Task.Run(async () =>
                 {
                     await Task.Delay(demoUploadDelay * 1000);
+                    // Demos recorded by older builds (relative tv_record path) are in csgo/addons/metamod/.
+                    string demoPath = demoPaths.FirstOrDefault(File.Exists) ?? demoPaths[0];
                     await UploadFileAsync(demoPath, capturedUrl, capturedHeaderKey, capturedHeaderValue, liveMatchId, currentMapNumber, roundNumber);
                 });
             });

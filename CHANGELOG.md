@@ -1,5 +1,13 @@
 # MatchZy Changelog
 
+# 0.8.24
+
+#### September 25, 2026
+
+- Fixed demo file names: only ASCII letters, digits, `-`, `_` and `.` are kept. Workshop map names (`workshop/<id>/<map>`) no longer add slashes (the last segment is used for `{MAP}`), and team names with `/ \ : ; " ' | ? *` or symbols no longer break `tv_record` or the upload headers. Cyrillic is transliterated and accents are dropped; when nothing usable is left the name falls back to `{TIME}_{MATCH_ID}`.
+- Fixed demos being recorded in `csgo/addons/metamod/MatchZy/` on Metamod servers while MatchZy looked for them in `csgo/MatchZy/` (upload failed with file not found). `tv_record` now gets the absolute path (quoted when it contains a space), and the upload also looks in `csgo/addons/metamod/` for demos recorded by older builds. A `matchzy_demo_path` without a trailing `/` no longer runs into the file name.
+- Upload logs now say "round backup" instead of "demo" for round backup files (`[BACKUP_UPLOAD]` / `[DEMO_UPLOAD]` markers), and a missing upload URL is logged once per match instead of on every round.
+
 # 0.8.23
 
 #### September 24, 2026
