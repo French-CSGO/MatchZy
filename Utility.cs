@@ -2021,22 +2021,47 @@ namespace MatchZy
             return value;
         }
 
-        public async Task UploadFileAsync(string? filePath, string fileUploadURL, string headerKey, string headerValue, long matchId, int mapNumber, int roundNumber)
+        // "<kind>:<matchId>" pairs whose "no upload URL" line was already logged (see UploadFileAsync).
+        private readonly HashSet<string> uploadSkipLogged = new();
+
+        /// <summary>
+        /// Uploads a demo (<paramref name="isDemo"/> true) or a round backup JSON (false) over HTTP.
+        /// Logs name the kind of file, so a round backup is not reported as a demo.
+        /// </summary>
+        public async Task UploadFileAsync(string? filePath, string fileUploadURL, string headerKey, string headerValue, long matchId, int mapNumber, int roundNumber, bool isDemo = true)
         {
+            string kind = isDemo ? "demo" : "round backup";
+            string marker = isDemo ? "[DEMO_UPLOAD]" : "[BACKUP_UPLOAD]";
+
             if (filePath == null || fileUploadURL == "")
             {
-                Log($"[UploadFileAsync] Not able to upload the file, either filePath or fileUploadURL is not set. filePath: {filePath} fileUploadURL: {fileUploadURL}");
+                // Without an upload URL the file stays on the server, and that is fine.
+                // Say so once per match and file kind, not on every round.
+                bool firstForMatch;
+                lock (uploadSkipLogged)
+                {
+                    firstForMatch = uploadSkipLogged.Add($"{kind}:{matchId}");
+                }
+                if (firstForMatch)
+                {
+                    string urlConvar = isDemo ? "matchzy_demo_upload_url" : "matchzy_remote_backup_url";
+                    string where = filePath == null ? "on the server" : $"on the server in {Path.GetDirectoryName(filePath)}";
+                    Log($"[UploadFileAsync] {char.ToUpperInvariant(kind[0])}{kind.Substring(1)} files for match {matchId} are not uploaded because {urlConvar} is not set; they stay {where}. Logged once per match.");
+                }
                 return;
             }
 
             try
             {
                 using var httpClient = new HttpClient();
-                Log($"[UploadFileAsync] Going to upload the file on {fileUploadURL}. Complete path: {filePath}");
+                Log($"[UploadFileAsync] Going to upload the {kind} file on {fileUploadURL}. Complete path: {filePath}");
+                Log($"{marker} START matchId={matchId} map={mapNumber} round={roundNumber} file=\"{Path.GetFileName(filePath)}\"");
 
                 if (!File.Exists(filePath))
                 {
-                    Log($"[UploadFileAsync ERROR] File not found: {filePath}");
+                    Log($"[UploadFileAsync ERROR] {char.ToUpperInvariant(kind[0])}{kind.Substring(1)} file not found: {filePath}");
+                    if (isDemo) Log($"[UploadFileAsync ERROR] The demo file was not created. Check if GOTV is enabled (tv_enable 1)");
+                    Log($"{marker} FAIL matchId={matchId} map={mapNumber} reason=\"file_not_found\"");
                     return;
                 }
 
@@ -2069,16 +2094,19 @@ namespace MatchZy
 
                 if (response.IsSuccessStatusCode)
                 {
-                    Log($"[UploadFileAsync] File upload successful for matchId: {matchId} mapNumber: {mapNumber} fileName: {Path.GetFileName(filePath)}.");
+                    Log($"[UploadFileAsync] {char.ToUpperInvariant(kind[0])}{kind.Substring(1)} upload successful for matchId: {matchId} mapNumber: {mapNumber} fileName: {Path.GetFileName(filePath)}.");
+                    Log($"{marker} SUCCESS matchId={matchId} map={mapNumber} status={(int)response.StatusCode}");
                 }
                 else
                 {
-                    Log($"[UploadFileAsync ERROR] Failed to upload file. Status code: {response.StatusCode} Response: {await response.Content.ReadAsStringAsync()}");
+                    Log($"[UploadFileAsync ERROR] Failed to upload {kind} file. Status code: {response.StatusCode} Response: {await response.Content.ReadAsStringAsync()}");
+                    Log($"{marker} FAIL matchId={matchId} map={mapNumber} status={(int)response.StatusCode}");
                 }
             }
             catch (Exception e)
             {
-                Log($"[UploadFileAsync FATAL] An error occurred: {e.Message}");
+                Log($"[UploadFileAsync FATAL] An error occurred while uploading the {kind} file: {e.Message}");
+                Log($"{marker} FATAL matchId={matchId} map={mapNumber} error=\"{e.Message}\"");
             }
         }
 
